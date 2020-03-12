@@ -1,0 +1,41 @@
+{
+    "sign":
+    {
+        "preprocessors":
+        {
+            "mean":
+            {
+                "R": 0.3899,
+                "G": 0.4057,
+                "B": 0.4130
+            },
+            "std":
+            {
+                "R": 0.2600,
+                "G": 0.2687,
+                "B": 0.2839
+            }
+        },
+        "model":
+        {
+            "net_width": 640,
+            "net_height": 384
+        },
+        "snpe":
+        {
+            "runtime": "gpu32",
+            "dlc_path": "/data/local/tmp/FCOS_mobilenetv2.dlc",
+            "output_layer": ["output_cls", "output_center", "output_reg"]
+        },
+        "evaluate":
+        {
+            "times": 1000,
+            "image_path": "/data/local/tmp/pics/%d_net_big.jpg"
+        }
+    },
+    "lane":
+    {
+        
+    }
+
+}
