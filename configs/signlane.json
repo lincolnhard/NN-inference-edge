@@ -19,7 +19,15 @@
         "model":
         {
             "net_width": 640,
-            "net_height": 384
+            "net_height": 384,
+            "feature_width": 80,
+            "feature_height": 48,
+            "num_class": 4,
+            "stride": 8,
+            "topK": 60,
+            "nms_threshold": 10.0,
+            "class_score_threshold": 0.6,
+            "scale": 3.131397
         },
         "snpe":
         {
