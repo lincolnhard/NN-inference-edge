@@ -28,7 +28,7 @@ endif
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := snpe-sample
-LOCAL_SRC_FILES := examples/main_sign_fps.cpp
+LOCAL_SRC_FILES := examples/main_sign_draw.cpp
 LOCAL_SRC_FILES += $(addprefix src/, $(notdir $(wildcard $(LOCAL_PATH)/src/*.cpp)))
 LOCAL_SHARED_LIBRARIES := libSNPE libSYMPHONYCPU libopencv_core libopencv_highgui libopencv_imgproc libopencv_imgcodecs libopencv_videoio
 LOCAL_C_INCLUDES += /Users/lincolnlee/Documents/NN-inference-using-SNPE/nlohmann-json

@@ -3,6 +3,7 @@
 #include <chrono>
 #include <thread>
 #include <filesystem>
+#include <assert.h>
 #include <json.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -34,23 +35,20 @@ int main(int ac, char *av[])
 
     SignDet signdet(signconfig);
 
+    // todo: add c++ fs to traverse all jpg pics in assigned folder
+
     const std::string IMPATH = signconfig["evaluate"]["image_path"].get<std::string>();
-    const int NUM_RUN = signconfig["evaluate"]["times"].get<int>();
-    double timesum = 0.0;
-    for (int i = 0; i < NUM_RUN; ++i)
+    for (int i = 0; i < 10; ++i)
     {
-        std::string picpath = cv::format(IMPATH.c_str(), (i % 10) + 1);
+        std::string picpath = cv::format(IMPATH.c_str(), i+1);
+        std::string picsavepath = cv::format("/data/local/tmp/pics/%d_net_big_sign.jpg", i+1);
+
         cv::Mat im = cv::imread(picpath);
 
-        std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
+        assert(im.empty() != true);
 
-        signdet.run(im.data);
-
-        std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
-        timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
+        signdet.run(im.data, im.cols, im.rows, picsavepath);
     }
-
-    SLOG_INFO << "sign detection fps: " << 1.0 / (timesum / NUM_RUN / 1000.0) << std::endl;
 
 
 
