@@ -11,7 +11,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include "log_stream.hpp"
-#include "sign_detection.hpp"
+#include "lane_detection.hpp"
 
 // using json = nlohmann::json;
 static auto LOG = spdlog::stdout_color_mt("MAIN");
@@ -32,12 +32,12 @@ int main(int ac, char *av[])
     fin.close();
 
 
-    nlohmann::json signconfig = config["sign"];
-    SignDet signdet(signconfig);
+    nlohmann::json laneconfig = config["lane"];
+    LaneDet lanedet(laneconfig);
 
-    const std::string folderpath = signconfig["evaluate"]["folder_path"].get<std::string>();
-    const int NETW = signconfig["model"]["net_width"].get<int>();
-    const int NETH = signconfig["model"]["net_height"].get<int>();
+    const std::string folderpath = laneconfig["evaluate"]["folder_path"].get<std::string>();
+    const int NETW = laneconfig["model"]["net_width"].get<int>();
+    const int NETH = laneconfig["model"]["net_height"].get<int>();
 
     std::string resultpath = folderpath + "result/";
     mkdir(resultpath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -64,9 +64,8 @@ int main(int ac, char *av[])
                 cv::Mat im = cv::imread(srcfullpath);
                 // cv::Mat imnet;
                 // cv::resize(im(cv::Rect(0, 0, 1280, 768)), imnet, cv::Size(NETW, NETH)); // maybe its no cool to hard code here
-
-                // signdet.run(imnet.data, imnet.cols, imnet.rows, dstfullpath);
-                signdet.run(im.data, im.cols, im.rows, dstfullpath);
+                // lanedet.run(imnet.data, imnet.cols, imnet.rows, dstfullpath);
+                lanedet.run(im.data, im.cols, im.rows, dstfullpath);
             }
         }
     }

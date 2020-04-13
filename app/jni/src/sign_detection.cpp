@@ -12,8 +12,6 @@ static auto LOG = spdlog::stdout_color_mt("SIGN");
 SignDet::SignDet(const nlohmann::json config)
 {
     SLOG_INFO << "Init sign detection start" << std::endl;
-    platform = std::make_unique<SNPEContext>(config["snpe"]);
-    postprocessor = std::make_unique<PostprocessFCOS>(config["model"]);
     netW = config["model"]["net_width"].get<int>();
     netH = config["model"]["net_height"].get<int>();
     numClass = config["model"]["num_class"].get<int>();
@@ -23,9 +21,10 @@ SignDet::SignDet(const nlohmann::json config)
     stdR = config["preprocessors"]["std"]["R"].get<float>();
     stdG = config["preprocessors"]["std"]["G"].get<float>();
     stdB = config["preprocessors"]["std"]["B"].get<float>();
-    predResult.resize(numClass);
 
-    SLOG_INFO << "Init sign detection done" << std::endl;
+    platform = std::make_unique<SNPEContext>(config["snpe"], netW, netH);
+    postprocessor = std::make_unique<PostprocessFCOS>(config["model"]);
+    predResult.resize(numClass);
 }
 
 SignDet::~SignDet(void)
@@ -33,41 +32,39 @@ SignDet::~SignDet(void)
 
 }
 
-void SignDet::run(uint8_t *src, const int srcw, const int srch, std::string dstpath)
+std::vector<std::vector<ScoreVertices>> SignDet::run(uint8_t *src)
 {
     preprocessing(src);
-    SLOG_INFO << "preprocessing done" << std::endl;
     inference();
-    SLOG_INFO << "inference done" << std::endl;
     postprocessing();
-    SLOG_INFO << "postprocessing done" << std::endl;
-
 
     reprojectBasedOnTemplate();
-    saveresult(src, srcw, srch, dstpath);
+    // saveresult(src, srcw, srch, dstpath);
+
+    return predResult;
 }
 
-void SignDet::saveresult(uint8_t *src, int srcw, int srch, std::string dstpath)
-{
-    cv::Mat dst(srch, srcw, CV_8UC3, src);
-    for (int clsIdx = 0; clsIdx < numClass - 1; ++clsIdx)
-    {
-        std::vector<ScoreVertices> &signobjvector = predResult[clsIdx];
-        const int numSign = signobjvector.size();
-        for (int signIdx = 0; signIdx < numSign; ++signIdx)
-        {
-            cv::Point vertices[1][4];
-            vertices[0][0] = cv::Point(signobjvector[signIdx].x0 * srcw, signobjvector[signIdx].y0 * srch);
-            vertices[0][1] = cv::Point(signobjvector[signIdx].x1 * srcw, signobjvector[signIdx].y1 * srch);
-            vertices[0][2] = cv::Point(signobjvector[signIdx].x2 * srcw, signobjvector[signIdx].y2 * srch);
-            vertices[0][3] = cv::Point(signobjvector[signIdx].x3 * srcw, signobjvector[signIdx].y3 * srch);
-            const cv::Point* vtsptr[1] = {vertices[0]};
-            int npt[] = {4};
-            cv::polylines(dst, vtsptr, npt, 1, 1, cv::Scalar(255, 0, 0), 2, 16);
-        }
-    }
-    cv::imwrite(dstpath, dst);
-}
+// void SignDet::saveresult(uint8_t *src, int srcw, int srch, std::string dstpath)
+// {
+//     cv::Mat dst(srch, srcw, CV_8UC3, src);
+//     for (int clsIdx = 0; clsIdx < numClass - 1; ++clsIdx)
+//     {
+//         std::vector<ScoreVertices> &signobjvector = predResult[clsIdx];
+//         const int numSign = signobjvector.size();
+//         for (int signIdx = 0; signIdx < numSign; ++signIdx)
+//         {
+//             cv::Point vertices[1][4];
+//             vertices[0][0] = cv::Point(signobjvector[signIdx].x0 * srcw, signobjvector[signIdx].y0 * srch);
+//             vertices[0][1] = cv::Point(signobjvector[signIdx].x1 * srcw, signobjvector[signIdx].y1 * srch);
+//             vertices[0][2] = cv::Point(signobjvector[signIdx].x2 * srcw, signobjvector[signIdx].y2 * srch);
+//             vertices[0][3] = cv::Point(signobjvector[signIdx].x3 * srcw, signobjvector[signIdx].y3 * srch);
+//             const cv::Point* vtsptr[1] = {vertices[0]};
+//             int npt[] = {4};
+//             cv::polylines(dst, vtsptr, npt, 1, 1, cv::Scalar(255, 0, 0), 2, 16);
+//         }
+//     }
+//     cv::imwrite(dstpath, dst);
+// }
 
 void SignDet::preprocessing(const uint8_t *src)
 {

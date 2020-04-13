@@ -7,7 +7,7 @@
 
 static auto LOG = spdlog::stdout_color_mt("PLATFORM_SNPE");
 
-SNPEContext::SNPEContext(const nlohmann::json config)
+SNPEContext::SNPEContext(const nlohmann::json config, const int inputW, const int inputH)
 {
     std::string runtimeName = config["runtime"].get<std::string>();
     std::string dlcPath = config["dlc_path"].get<std::string>();
@@ -40,11 +40,14 @@ SNPEContext::SNPEContext(const nlohmann::json config)
     std::unique_ptr<zdl::DlContainer::IDlContainer> container = zdl::DlContainer::IDlContainer::open(zdl::DlSystem::String(dlcPath.c_str()));
     zdl::SNPE::SNPEBuilder snpeBuilder(container.get());
 
+    zdl::DlSystem::TensorShapeMap inShape;
+    inShape.add("data", {1, static_cast<unsigned long>(inputH), static_cast<unsigned long>(inputW), 3});
 
     snpengine = snpeBuilder.setOutputLayers(outputLayers)
                            .setRuntimeProcessor(runtime)
                            .setCPUFallbackMode(true)
                            .setPerformanceProfile(zdl::DlSystem::PerformanceProfile_t::SUSTAINED_HIGH_PERFORMANCE)
+                           .setInputDimensions(inShape)
                            .build();
     zdl::DlSystem::TensorShape netTensorShape = snpengine->getInputDimensions();
     inTensor = zdl::SNPE::SNPEFactory::getTensorFactory().createTensor(netTensorShape);

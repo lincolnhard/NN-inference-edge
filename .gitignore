@@ -1,0 +1,7 @@
+libraries
+toolchain
+app/obj
+app/libs
+**/.DS_Store
+pics
+app/jni/obj

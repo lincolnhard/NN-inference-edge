@@ -16,7 +16,7 @@ adb push obj/local/arm64-v8a/snpe-sample /data/local/tmp
 # login to target
 adb shell
 ########## target side ##########
-export LD_LIBRARY_PATH=/data/local/tmp/lib64clang:/data/local/tmp/libopencv
+export LD_LIBRARY_PATH=/data/local/tmp/libsnpe:/data/local/tmp/libopencv
 export ADSP_LIBRARY_PATH="/data/local/tmp/libdsp;/system/lib/rfsa/adsp;/system/vendor/lib/rfsa/adsp;/dsp"
 ./snpe-sampe
 ```

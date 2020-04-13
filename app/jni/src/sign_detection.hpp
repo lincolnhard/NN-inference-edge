@@ -1,18 +1,18 @@
 #pragma once
-#include "obj_detection.hpp"
 #include "platform_snpe.hpp"
 #include "postprocess_fcos.hpp"
 #include <json.hpp>
+#include <cstdint>
+#include <string>
 
 
-
-class SignDet : ObjDet
+class SignDet
 {
 public:
     SignDet(const nlohmann::json config);
     ~SignDet(void);
-    void run(uint8_t *src, const int srcw, const int srch, std::string dstpath);
-    void saveresult(uint8_t *src, const int srcw, const int srch, std::string dstpath);
+    std::vector<std::vector<ScoreVertices>> run(uint8_t *src);
+    // void saveresult(uint8_t *src, const int srcw, const int srch, std::string dstpath);
     std::vector<std::vector<ScoreVertices>> predResult;
 private:
     void preprocessing(const uint8_t *src);

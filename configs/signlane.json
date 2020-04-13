@@ -38,12 +38,32 @@
         "evaluate":
         {
             "times": 1000,
-            "image_path": "/data/local/tmp/pics/%d_net_big.jpg"
+            "image_path": "/data/local/tmp/pics/%d_net_big.jpg",
+            "folder_path": "/data/local/tmp/recordvepp/"
         }
     },
     "lane":
     {
-        
+        "model":
+        {
+            "net_width": 640,
+            "net_height": 384,
+            "net_width_cut": 0,
+            "net_height_cut": 128,
+            "score_threshold": 0.0
+        },
+        "snpe":
+        {
+            "runtime": "dsp8",
+            "dlc_path": "/data/local/tmp/patricknobn/lane0125_quantized.dlc",
+            "output_layer": ["conv18"]
+        },
+        "evaluate":
+        {
+            "times": 1000,
+            "image_path": "/data/local/tmp/pics/%d_net_big.jpg",
+            "folder_path": "/data/local/tmp/recordvepp/"
+        }
     }
 
 }

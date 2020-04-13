@@ -73,7 +73,6 @@ void PostprocessFCOS::run(std::vector<std::vector<ScoreVertices>> &predResult)
     // score argmax
     std::vector<KeyPoint> keypoints;
     const int FEAT_PLANE_SIZE = featW * featH;
-    SLOG_INFO << "FEAT_PLANE_SIZE: " << FEAT_PLANE_SIZE << std::endl; 
     for (int posIdx = 0; posIdx < FEAT_PLANE_SIZE; ++posIdx)
     {
         int startclsIdx = numClass * posIdx;
@@ -106,8 +105,6 @@ void PostprocessFCOS::run(std::vector<std::vector<ScoreVertices>> &predResult)
         keypoints.push_back(std::move(keyPt));
     }
 
-    SLOG_INFO << "score argmax OK" << std::endl;
-
     // topk, distance to vertex, separate them into each class
     std::vector<std::vector<KeyPoint>> classKeyPoints(numClass);
     std::partial_sort(keypoints.begin(), keypoints.begin() + topk, keypoints.end(), [](KeyPoint a, KeyPoint b) {return a.score > b.score;});
@@ -124,8 +121,6 @@ void PostprocessFCOS::run(std::vector<std::vector<ScoreVertices>> &predResult)
         keypoints[ordIdx].vertex[3].y = keypoints[ordIdx].center.y + keypoints[ordIdx].vertex[3].y;
         classKeyPoints[clsIdx].push_back(std::move(keypoints[ordIdx]));
     }
-
-    SLOG_INFO << "topk OK" << std::endl;
 
     // nms
     std::vector<std::deque<KeyPoint>> tmpKeypoints(numClass);  // use deque, because its pop_front is the fastest
@@ -186,8 +181,6 @@ void PostprocessFCOS::run(std::vector<std::vector<ScoreVertices>> &predResult)
         }
     }
 
-    SLOG_INFO << "nms OK" << std::endl;
-
     // fill in predResult
     for (int clsIdx = 0; clsIdx < numClass; ++clsIdx)
     {
@@ -199,7 +192,7 @@ void PostprocessFCOS::run(std::vector<std::vector<ScoreVertices>> &predResult)
 
         // maybe not show info here
         int numClsObj = nmsKeyPoints[clsIdx].size();
-        SLOG_INFO << "class " << clsIdx << ": " << numClsObj << std::endl;
+        // SLOG_INFO << "class " << clsIdx << ": " << numClsObj << std::endl;
 
         for (int i = 0; i < numClsObj; ++i)
         {
@@ -216,6 +209,4 @@ void PostprocessFCOS::run(std::vector<std::vector<ScoreVertices>> &predResult)
             predResult[clsIdx].push_back(std::move(sv));
         }
     }
-
-    SLOG_INFO << "fillin predResult OK" << std::endl;
 }
