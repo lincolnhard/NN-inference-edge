@@ -62,8 +62,8 @@ class FCOS_Detection(object):
             scores = mlvl_scores[cls_inds, i]
             scores *= mlvl_centerness[cls_inds]
             occl = mlvl_occlusions[cls_inds, :]
-            #keep = self.nms_vertex(v, scores, self.nms_threshold)
-            keep = nms(self.poly_to_box(v), scores, self.nms_threshold)
+            keep = self.nms_vertex(v, scores, 10)
+            # keep = nms(self.poly_to_box(v), scores, self.nms_threshold)
             for idx in keep:
                 polygon = v[idx]
                 polygon[::2] = polygon[::2] / self.img_size[1]

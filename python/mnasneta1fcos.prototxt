@@ -1587,3 +1587,69 @@ layer {
     stride: 1
   }
 }
+layer {
+  name: "cls_score"
+  type: "Sigmoid"
+  bottom: "conv66"
+  top: "cls_score"
+}
+layer {
+  name: "centerness"
+  type: "Sigmoid"
+  bottom: "conv67"
+  top: "centerness"
+}
+layer {
+  name: "occlusion"
+  type: "Sigmoid"
+  bottom: "conv69"
+  top: "occlusion"
+}
+layer {
+  name: "scoremap_perm"
+  type: "Permute"
+  bottom: "cls_score"
+  top: "scoremap_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "centernessmap_perm"
+  type: "Permute"
+  bottom: "centerness"
+  top: "centernessmap_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "occlusionmap_perm"
+  type: "Permute"
+  bottom: "occlusion"
+  top: "occlusionmap_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "regressionmap_perm"
+  type: "Permute"
+  bottom: "conv68"
+  top: "regressionmap_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}

@@ -126,7 +126,7 @@ class MnasNetA1FCOS():
                                            stride=1,
                                            use_activation=False,
                                            bias_term=True)
-        bbox_pred, layer_idx = ConvBNReLU(net, layer_idx,
+        vetex_pred, layer_idx = ConvBNReLU(net, layer_idx,
                                           bottom_blob,
                                           self.max_joints*2,
                                           kernel_size=1,
@@ -140,6 +140,13 @@ class MnasNetA1FCOS():
                                           stride=1,
                                           use_activation=False,
                                           bias_term=True)
+        net['cls_score'] = L.Sigmoid(cls_score)
+        net['centerness'] = L.Sigmoid(centerness)
+        net['occlusion'] = L.Sigmoid(occlusion)
+        net['scoremap_perm'] = L.Permute(net['cls_score'], order=[0, 2, 3, 1])
+        net['centernessmap_perm'] = L.Permute(net['centerness'], order=[0, 2, 3, 1])
+        net['occlusionmap_perm'] = L.Permute(net['occlusion'], order=[0, 2, 3, 1])
+        net['regressionmap_perm'] = L.Permute(vetex_pred, order=[0, 2, 3, 1])
 
         return layer_idx
 

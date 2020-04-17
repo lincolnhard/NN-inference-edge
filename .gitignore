@@ -5,3 +5,4 @@ app/libs
 **/.DS_Store
 pics
 app/jni/obj
+**/*.pyc
