@@ -1,4 +1,8 @@
-libraries
+libraries/autonomy_sdk_0.62.1.1.74_navinfo
+libraries/ffmpegbuild
+libraries/opencv
+libraries/snpe-1.25.0.287
+libraries/snpe-1.35.0.698
 toolchain
 app/obj
 app/libs
