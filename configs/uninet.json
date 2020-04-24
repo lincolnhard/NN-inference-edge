@@ -1,0 +1,12 @@
+{
+    "evaluate":{
+        "times": 10,
+        "image_path": "data/VIRB0695_07758.jpg",
+        "images_for_fps": "pics/%d_net_big.jpg",
+        "folder_path": "/data/local/tmp/recordvepp/"
+    },
+    "trt":{
+        "engine": "/home/gw/Documents/NN-inference-using-SNPE/uninetspacetrt/engine/uninet.engine",
+        "uff": "/home/gw/Documents/NN-inference-using-SNPE/data/uninet1.uff"
+    }
+}

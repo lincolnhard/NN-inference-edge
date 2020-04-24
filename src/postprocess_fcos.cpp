@@ -1,11 +1,6 @@
 #include <assert.h>
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include "log_stream.hpp"
 #include "postprocess_fcos.hpp"
 #include <deque>
-
-static auto LOG = spdlog::stdout_color_mt("FCOS");
 
 PostprocessFCOS::~PostprocessFCOS()
 {

@@ -1,37 +1,34 @@
 # CXXCL := toolchain/aarch64-unknown-linux-gnu/bin/aarch64-unknown-linux-gnu-g++
 CXXCL := g++
 
-CXXFLAGS += -O0 -g -std=c++11 -funsafe-math-optimizations -ftree-vectorize -flax-vector-conversions -fstrict-aliasing
+CXXFLAGS += -O3 -std=c++11 -funsafe-math-optimizations -ftree-vectorize -flax-vector-conversions -fstrict-aliasing
 
 INCLUDES += -I src
-# INCLUDES += -I libraries/opencv/include
-INCLUDES += -I /Users/lincolnlee/Documents/opencv/installx86/include
-INCLUDES += -I /Users/lincolnlee/Documents/caffe/include
-INCLUDES += -I /Users/lincolnlee/Documents/OpenBLAS
+INCLUDES += -I /usr/include/opencv4
 INCLUDES += -I libraries/spdlog/include
 INCLUDES += -I libraries/nlohmann-json
+INCLUDES += -I /usr/local/cuda/include
 
 DEFINES += -D NDEBUG
-DEFINES += -D CPU_ONLY
 
-# SHAREDPATH += -Wl,-rpath,libraries/ffmpegbuild/lib
 
-# LDFLAGS += -Llibraries/opencv/linux/lib64
-LDFLAGS += -L/Users/lincolnlee/Documents/opencv/installx86/lib
+LDFLAGS += -L/usr/lib/aarch64-linux-gnu
 LDFLAGS += -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio -lopencv_dnn
-LDFLAGS += -L/Users/lincolnlee/Documents/caffe/build/lib
-LDFLAGS += -lcaffe
-LDFLAGS += -L/Users/lincolnlee/Documents/OpenBLAS
-LDFLAGS += -lopenblas
-LDFLAGS += -L/usr/local/Cellar/glog/0.3.5_3/lib
-LDFLAGS += -lglog
+LDFLAGS += -lglog -lboost_system
+LDFLAGS += -lnvinfer -lnvparsers -lcuda -lnvinfer_plugin
+LDFLAGS += -L/usr/local/cuda-10.0/targets/aarch64-linux/lib
+LDFLAGS += -lcudart
 LDFLAGS += -pthread -lm
 
 OBJROOT := obj
 
 SRCFILES := $(wildcard src/*.cpp)
 
-EXAMPLEFILES := examples/mnasneta1fcos_fps.cpp
+# EXAMPLEFILES := examples/mobilenetv2unet_tensorrt.cpp
+# EXAMPLEFILES := examples/combine.cpp
+# EXAMPLEFILES := examples/mnasneta1fcos_trt_debug.cpp
+# EXAMPLEFILES := examples/mnasneta1fcos_trt_fps.cpp
+EXAMPLEFILES := examples/uninet_trt_fps.cpp
 
 OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cpp, %.o, $(SRCFILES) $(EXAMPLEFILES)))
 
