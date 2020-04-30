@@ -18,8 +18,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-template <typename T>
-using SampleUniquePtr = std::unique_ptr<T, samplesCommon::InferDeleter>;
+
 
 void plotResult(cv::Mat &im, const float *scoremap, const int NETH, const float SCORE_TH)
 {
@@ -62,10 +61,10 @@ int main(int ac, char *av[])
 
 
     initLibNvInferPlugins(&gLogger.getTRTLogger(), "");
-    auto trtbuilder = SampleUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(gLogger.getTRTLogger()));
-    auto trtnetwork = SampleUniquePtr<nvinfer1::INetworkDefinition>(trtbuilder->createNetwork());
-    auto trtconfig = SampleUniquePtr<nvinfer1::IBuilderConfig>(trtbuilder->createBuilderConfig());
-    auto trtparser = SampleUniquePtr<nvcaffeparser1::ICaffeParser>(nvcaffeparser1::createCaffeParser());
+    nvinfer1::IBuilder *trtbuilder = nvinfer1::createInferBuilder(gLogger.getTRTLogger());
+    nvinfer1::INetworkDefinition *trtnetwork = trtbuilder->createNetwork();
+    nvinfer1::IBuilderConfig *trtconfig = trtbuilder->createBuilderConfig();
+    nvcaffeparser1::ICaffeParser *trtparser = nvcaffeparser1::createCaffeParser();
 
     const nvcaffeparser1::IBlobNameToTensor* blobNameToTensor = trtparser->parse(CAFFETXT.c_str(), CAFFEBIN.c_str(), *trtnetwork, nvinfer1::DataType::kFLOAT);
     for (auto& s : OUT_TENSOR_NAMES)
@@ -81,8 +80,10 @@ int main(int ac, char *av[])
         trtconfig->setFlag(nvinfer1::BuilderFlag::kFP16);
     }
 
-    std::shared_ptr<nvinfer1::ICudaEngine> engine = 
-        std::shared_ptr<nvinfer1::ICudaEngine>(trtbuilder->buildEngineWithConfig(*trtnetwork, *trtconfig), samplesCommon::InferDeleter());
+    // std::shared_ptr<nvinfer1::ICudaEngine> engine = 
+    //     std::shared_ptr<nvinfer1::ICudaEngine>(trtbuilder->buildEngineWithConfig(*trtnetwork, *trtconfig), samplesCommon::InferDeleter());
+    nvinfer1::ICudaEngine *engine = trtbuilder->buildEngineWithConfig(*trtnetwork, *trtconfig);
+
 
     // Create RAII buffer manager object
     samplesCommon::BufferManager buffers(engine, 1);
@@ -116,13 +117,17 @@ int main(int ac, char *av[])
         std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
         timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
 
-        // const float* scoresTensor = static_cast<const float*>(buffers.getHostBuffer(OUT_TENSOR_NAMES[0]));
-        // plotResult(imnet, scoresTensor, NETH, SCORE_TH);
-        // cv::imwrite("result_" + std::to_string(t + 1) + ".jpg", imnet);
+        const float* scoresTensor = static_cast<const float*>(buffers.getHostBuffer(OUT_TENSOR_NAMES[0]));
+        plotResult(imnet, scoresTensor, NETH, SCORE_TH);
+        cv::imwrite("result_" + std::to_string(t + 1) + ".jpg", imnet);
     }
 
-    gLogInfo << "MobilenetV2Unet FPS: " << 1.0 / (timesum / EVALUATE_TIMES / 1000.0) << std::endl;
+    // gLogInfo << "MobilenetV2Unet FPS: " << 1.0 / (timesum / EVALUATE_TIMES / 1000.0) << std::endl;
 
+    trtbuilder->destroy();
+    trtnetwork->destroy();
+    trtconfig->destroy();
+    trtparser->destroy();
     nvcaffeparser1::shutdownProtobufLibrary();
 
     return 0;

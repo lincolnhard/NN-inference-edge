@@ -1,24 +1,7 @@
-/*
- * Copyright (c) 2019, NVIDIA CORPORATION. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 #ifndef TENSORRT_BUFFERS_H
 #define TENSORRT_BUFFERS_H
 
-#include "NvInfer.h"
-#include "common.h"
-#include "half.h"
+#include <NvInfer.h>
 #include <cassert>
 #include <cuda_runtime_api.h>
 #include <iostream>
@@ -28,11 +11,11 @@
 #include <numeric>
 #include <string>
 #include <vector>
+#include "trt_common.h"
 
 using namespace std;
 
-namespace samplesCommon
-{
+
 
 //!
 //! \brief  The GenericBuffer class is a templated class for buffers.
@@ -136,7 +119,7 @@ public:
     //!
     size_t nbBytes() const
     {
-        return this->size() * samplesCommon::getElementSize(mType);
+        return this->size() * getElementSize(mType);
     }
 
     //!
@@ -161,7 +144,7 @@ public:
     //!
     void resize(const nvinfer1::Dims& dims)
     {
-        return this->resize(samplesCommon::volume(dims));
+        return this->resize(Volume(dims));
     }
 
     ~GenericBuffer()
@@ -261,7 +244,7 @@ public:
                 dims.d[vecDim] = divUp(dims.d[vecDim], scalarsPerVec);
                 vol *= scalarsPerVec;
             }
-            vol *= samplesCommon::volume(dims);
+            vol *= Volume(dims);
             std::unique_ptr<ManagedBuffer> manBuf{new ManagedBuffer()};
             manBuf->deviceBuffer = DeviceBuffer(vol, type);
             manBuf->hostBuffer = HostBuffer(vol, type);
@@ -315,36 +298,6 @@ public:
         if (index == -1)
             return kINVALID_SIZE_VALUE;
         return mManagedBuffers[index]->hostBuffer.nbBytes();
-    }
-
-    //!
-    //! \brief Dump host buffer with specified tensorName to ostream.
-    //!        Prints error message to std::ostream if no such tensor can be found.
-    //!
-    void dumpBuffer(std::ostream& os, const std::string& tensorName)
-    {
-        int index = mEngine->getBindingIndex(tensorName.c_str());
-        if (index == -1)
-        {
-            os << "Invalid tensor name" << std::endl;
-            return;
-        }
-        void* buf = mManagedBuffers[index]->hostBuffer.data();
-        size_t bufSize = mManagedBuffers[index]->hostBuffer.nbBytes();
-        nvinfer1::Dims bufDims = mEngine->getBindingDimensions(index);
-        size_t rowCount = static_cast<size_t>(bufDims.nbDims >= 1 ? bufDims.d[bufDims.nbDims - 1] : mBatchSize);
-
-        os << "[" << mBatchSize;
-        for (int i = 0; i < bufDims.nbDims; i++)
-            os << ", " << bufDims.d[i];
-        os << "]" << std::endl;
-        switch (mEngine->getBindingDataType(index))
-        {
-        case nvinfer1::DataType::kINT32: print<int32_t>(os, buf, bufSize, rowCount); break;
-        case nvinfer1::DataType::kFLOAT: print<float>(os, buf, bufSize, rowCount); break;
-        case nvinfer1::DataType::kHALF: print<half_float::half>(os, buf, bufSize, rowCount); break;
-        case nvinfer1::DataType::kINT8: assert(0 && "Int8 network-level input and output is not supported"); break;
-        }
     }
 
     //!
@@ -432,9 +385,14 @@ private:
             if ((copyInput && mEngine->bindingIsInput(i)) || (!copyInput && !mEngine->bindingIsInput(i)))
             {
                 if (async)
+                {
                     CHECK(cudaMemcpyAsync(dstPtr, srcPtr, byteSize, memcpyType, stream));
+                }
                 else
+                {
+                    std::cout << "byteSize: " << byteSize << std::endl;
                     CHECK(cudaMemcpy(dstPtr, srcPtr, byteSize, memcpyType));
+                }
             }
         }
     }
@@ -445,6 +403,6 @@ private:
     std::vector<void*> mDeviceBindings; //!< The vector of device buffers needed for engine execution
 };
 
-} // namespace samplesCommon
+
 
 #endif // TENSORRT_BUFFERS_H
