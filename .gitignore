@@ -10,3 +10,6 @@ app/libs
 pics
 app/jni/obj
 **/*.pyc
+obj
+aurora
+uninetspacetrt
