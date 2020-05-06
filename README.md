@@ -10,7 +10,7 @@ Download [NDK]([https://developer.android.com/ndk/downloads](https://developer.a
 ```
 ########## host side ##########
 cd app
-ndk-build
+ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk
 # send to target
 adb push obj/local/arm64-v8a/snpe-sample /data/local/tmp
 # login to target
