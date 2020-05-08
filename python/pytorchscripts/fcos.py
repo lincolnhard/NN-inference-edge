@@ -1,7 +1,9 @@
+import math
 import torch
-from torch import nn
-from .utils import normal_init, multi_apply
 import numpy as np
+from torch import nn
+import torch.nn.functional as F
+from .utils import multi_apply, normal_init, constant_init
 from .mobilenetv2 import InvertedResidual
 
 class Scale(nn.Module):
@@ -13,6 +15,7 @@ class Scale(nn.Module):
     def forward(self, input):
         return input * self.scale
 
+
 class ConvBNReLU(nn.Sequential):
 
     def __init__(self, in_planes, out_planes, kernel_size=3, stride=1, groups=1):
@@ -21,6 +24,7 @@ class ConvBNReLU(nn.Sequential):
             nn.Conv2d(in_planes, out_planes, kernel_size, stride, padding, groups=groups, bias=False),
             nn.BatchNorm2d(out_planes),
             nn.ReLU6(inplace=True))
+
 
 class FPN(nn.Module):
 
@@ -69,6 +73,7 @@ class FPN(nn.Module):
             if module.bias is not None:
                 nn.init.constant_(module.bias, 0)
 
+
 class FPN_M(nn.Module):
 
     def __init__(self, out_channel, feature_layers, width_mult):
@@ -94,6 +99,7 @@ class FPN_M(nn.Module):
         out = self.conv[1](out)
         out = self.upsample[1](out) + x[0]
         out = self.conv[2](out)
+
         results = [out]
         return results
 
@@ -160,6 +166,7 @@ class RPN(nn.Module):
         normal_init(self.centerness, std=0.01)
         normal_init(self.occlusion, std=0.01, bias=bias_cls)
 
+
 class RPN_M(nn.Module):
 
     def __init__(self, channels, width_mult, num_classes, strides, max_joints):
@@ -200,6 +207,58 @@ class RPN_M(nn.Module):
         normal_init(self.bbox_pred, std=0.01)
         normal_init(self.centerness, std=0.01)
         normal_init(self.occlusion, std=0.01, bias=bias_cls)
+
+
+class FCOSHead(nn.Module):
+
+    def __init__(self, channels, num_classes):
+        super(FCOSHead, self).__init__()
+        self.channels = channels
+        self.num_classes = num_classes - 1
+        self.strides=(8, 16, 32, 64, 128)
+        cls_tower = []
+        bbox_tower = []
+        for i in range(4):
+            cls_tower.append(nn.Conv2d(self.channels, self.channels, kernel_size=3, stride=1, padding=1, bias=False))
+            cls_tower.append(nn.GroupNorm(32, self.channels))
+            cls_tower.append(nn.ReLU())
+            bbox_tower.append(nn.Conv2d(self.channels, self.channels, kernel_size=3, stride=1, padding=1, bias=False))
+            bbox_tower.append(nn.GroupNorm(32, self.channels))
+            bbox_tower.append(nn.ReLU())
+        self.cls_tower = nn.Sequential(*cls_tower)
+        self.bbox_tower = nn.Sequential(*bbox_tower)
+        self.cls_logits = nn.Conv2d(self.channels, self.num_classes, kernel_size=3, stride=1, padding=1)
+        self.bbox_pred = nn.Conv2d(self.channels, 4, kernel_size=3, stride=1, padding=1)
+        self.centerness = nn.Conv2d(self.channels, 1, kernel_size=3, stride=1, padding=1)
+        self.scales = nn.ModuleList([Scale(1.0) for _ in self.strides])
+
+    def forward(self, feats):
+        return multi_apply(self.forward_single, feats, self.scales)
+
+    def forward_single(self, x, scale):
+        cls_feat = x
+        reg_feat = x
+        cls_feat = self.cls_tower(cls_feat)
+        cls_score = self.cls_logits(cls_feat)
+        centerness = self.centerness(cls_feat)
+        reg_feat = self.bbox_tower(reg_feat)
+        bbox_pred = scale(self.bbox_pred(reg_feat)).float().exp()
+        return cls_score, bbox_pred, centerness
+
+    def init_weights(self):
+        normal_init(self.cls_tower[0], std=0.01)
+        normal_init(self.cls_tower[3], std=0.01)
+        normal_init(self.cls_tower[6], std=0.01)
+        normal_init(self.cls_tower[9], std=0.01)
+        normal_init(self.bbox_tower[0], std=0.01)
+        normal_init(self.bbox_tower[3], std=0.01)
+        normal_init(self.bbox_tower[6], std=0.01)
+        normal_init(self.bbox_tower[9], std=0.01)
+        bias_cls = bias_init_with_prob(0.01)
+        normal_init(self.cls_logits, std=0.01, bias=bias_cls)
+        normal_init(self.bbox_pred, std=0.01)
+        normal_init(self.centerness, std=0.01)
+
 
 def bias_init_with_prob(prior_prob):
     bias_init = float(-np.log((1 - prior_prob) / prior_prob))
