@@ -5,7 +5,8 @@ from .shape import Shape
 
 class FCOS_Detection(object):
 
-    def __init__(self, labels, score_threshold=None, nms_threshold=0.5, img_size=[384, 640], joints=None):
+    def __init__(self, model, labels, score_threshold=None, nms_threshold=0.5, img_size=[384, 640], joints=None):
+        self.model = model
         self.labels = labels
         self.index_to_label = {i: labels[i] for i in range(len(labels))}
         self.score_threshold = score_threshold
