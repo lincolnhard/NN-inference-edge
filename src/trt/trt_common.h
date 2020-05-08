@@ -112,4 +112,51 @@ inline A divUp(A x, B n)
     return (x + n - 1) / n;
 }
 
+
+class TrtLogger : public nvinfer1::ILogger 
+{
+   public:
+    TrtLogger()
+    {
+        verbose_ = false;
+    }
+    /// Log message
+    /// \param[in] severity, Severity of the message
+    /// \param[in] msg, Message to be logged
+    void log(Severity severity, char const *msg)
+    {
+        if (verbose_)
+        {
+            std::cout << msg << std::endl;
+        }
+        switch (severity)
+        {
+            case Severity::kVERBOSE:
+            case Severity::kINFO:
+                LOG(INFO) << msg << std::endl;
+                break;
+            case Severity::kWARNING:
+                LOG(WARNING) << msg << std::endl;
+                break;
+            case Severity::kERROR:
+                LOG(ERROR) << msg << std::endl;
+                break;
+            case Severity::kINTERNAL_ERROR:
+                LOG(FATAL) << msg << std::endl;
+                break;
+        }
+    }
+
+    /// Set if logging is verbose
+    /// \param[in] verbose If true, logging will be more verbose
+    void SetVerbose(bool const verbose)
+    {
+        verbose_ = verbose;
+    }
+
+   private:
+    bool verbose_;
+};
+
+
 #endif // TENSORRT_COMMON_H
