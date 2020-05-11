@@ -1,15 +1,16 @@
 import os
 os.environ['GLOG_minloglevel'] = '2' # suprress Caffe verbose prints
 import torch
-import caffe
-from caffe import layers as L
-from caffe import params as P
+# import caffe
+# from caffe import layers as L
+# from caffe import params as P
 import cv2
 from torchvision import transforms
-import caffescripts
+# import caffescripts
 import pytorchscripts
 from PIL import Image, ImageDraw
 import numpy as np
+# import torch.nn.functional as F
 
 
 def cv2_draw(img, pts, line_color, line_width, is_closed=True, line_type=cv2.LINE_8, shift=0):
@@ -72,7 +73,7 @@ if __name__ == '__main__':
 
 
     with torch.no_grad():
-        cls_scores, vertex_preds, centernesses, occlusions, img_out = pytorch_model(imgt)
+        cls_scores, vertex_preds, centernesses, occlusions, bu_out = pytorch_model(imgt)
 
     score_thr = [0.4, 0.4]
     nms_thr = 0.5
@@ -101,6 +102,31 @@ if __name__ == '__main__':
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+
+
+    #=================
+    ### Export to ONNX
+    #=================
+
+    # torch.onnx.export(pytorch_model,
+    #                     imgt,
+    #                     "espnetv2fusion.onnx",
+    #                     export_params=True,
+    #                     keep_initializers_as_inputs=True,
+    #                     opset_version=10,
+    #                     do_constant_folding=True,
+    #                     input_names = ['input'],
+    #                     output_names = ['cls_score', 'bbox_pred', 'centerness', 'occlusion', 'bu_out']
+    #                 )
+
+    #===================
+    ### Apply ONNX model
+    #===================
+
+    # import onnx
+    # onnx_model = onnx.load("espnetv2fusion.onnx")
+    # onnx.checker.check_model(onnx_model)
+
     #==========================================================
     ### Create prototxt, caffemodel and feed with random weight
     #==========================================================
@@ -126,4 +152,23 @@ if __name__ == '__main__':
                     net.params[layername][i].data[...] = np.array([np.random.randint(-100, 100)/100.0])
     net.save(fileName + '.caffemodel')
 
-    print(net.blobs['prelu254'].data.shape)
+    print(net.blobs['sigmo182'].data.shape, net.blobs['prelu183'].data.shape)
+    # print(net.blobs['prelu254'].data.shape)
+
+    #=======================================
+    ### Feed weighting from pytorch to caffe
+    #=======================================
+
+    #=======
+    ### Test
+    #=======
+
+    # net = caffe.Net(fileName + '.prototxt', fileName + '.caffemodel', caffe.TEST)
+    # net.blobs['data'].data[...] = img
+    # out = net.forward()
+
+    # print(net.blobs['prelu254'].data.shape)
+    # print(net.blobs['scoremap_perm'].data.shape)
+    # print(net.blobs['centernessmap_perm'].data.shape)
+    # print(net.blobs['occlusionmap_perm'].data.shape)
+    # print(net.blobs['regressionmap_perm'].data.shape)

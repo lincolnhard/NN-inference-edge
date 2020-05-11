@@ -28,23 +28,17 @@ class DownSampler(nn.Module):
             )
         self.act = nn.PReLU(nout)
 
-    def forward(self, input, input2=None):
+    def forward(self, downtimes, input, input2=None):
         avg_out = self.avg(input)
         eesp_out = self.eesp(input)
         output = torch.cat([avg_out, eesp_out], 1)
         # print(input.shape, avg_out.shape, eesp_out.shape)
         # print(input.shape, input2.shape, avg_out.size(2))
-        input2_down_times = 0
+
         if input2 is not None:
-            w1 = avg_out.size(2)
-            while True:
-                #input2 = F.avg_pool2d(input2, kernel_size=3, padding=1, stride=2)
+            for _ in range(downtimes):
                 input2 = self.avg(input2)
-                w2 = input2.size(2)
-                input2_down_times += 1
-                if w2 == w1:
-                    break
-            # print(input2_down_times)
+
             output = output + self.inp_reinf(input2)
 
         return self.act(output)
@@ -88,13 +82,9 @@ class EESP(nn.Module):
         expanded = self.conv_1x1_exp(self.br_after_cat(torch.cat(output, 1)))
         del output
         if self.stride == 2 and self.downAvg:
-            # print('yoyoyoyoyoyo')
             return expanded
 
-        if expanded.size() == input.size():
-            # print('hihihihihihhi')
-            expanded = expanded + input
-
+        expanded = expanded + input
         return self.module_act(expanded)
 
 
@@ -117,7 +107,7 @@ class EESPNet(nn.Module):
         self.level3_0 = DownSampler(out_channel_map[1], out_channel_map[2], k=K[1], r_lim=recept_limit[1], reinf=self.input_reinforcement)
 
         self.level3 = nn.ModuleList()
-        for i in range(reps_at_each_level[1]):
+        for _ in range(reps_at_each_level[1]):
             self.level3.append(EESP(out_channel_map[2], out_channel_map[2], stride=1, k=K[2], r_lim=recept_limit[2]))
 
         self.level4_0 = DownSampler(out_channel_map[2], out_channel_map[3], k=K[2], r_lim=recept_limit[2], reinf=self.input_reinforcement)
