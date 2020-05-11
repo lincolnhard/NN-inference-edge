@@ -76,11 +76,9 @@ class EfficientPWConv(nn.Module):
 
     def forward(self, x):
         wts = self.wt_layer(x)
-        print(wts.shape)
         x = self.expansion_layer(x)
-        print(x.shape)
+        print(x.shape, wts.shape)
         x = x * wts
-        print(x.shape)
         return x
 
     def __repr__(self):

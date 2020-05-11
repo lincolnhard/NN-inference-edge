@@ -104,30 +104,22 @@ class ESPNetV2Fusion(nn.Module):
     def forward(self, x):
         x_size = (x.size(2), x.size(3))
         enc_out_l1 = self.base_net.level1(x)
-        enc_out_l2 = self.base_net.level2_0(enc_out_l1, x)
-        enc_out_l3_0 = self.base_net.level3_0(enc_out_l2, x)
-        for i, layer in enumerate(self.base_net.level3):
-            if i == 0:
-                enc_out_l3 = layer(enc_out_l3_0)
-            else:
-                enc_out_l3 = layer(enc_out_l3)
+        enc_out_l2 = self.base_net.level2_0(2, enc_out_l1, x)
+        enc_out_l3_0 = self.base_net.level3_0(3, enc_out_l2, x)
+        enc_out_l3 = enc_out_l3_0
+        for _, layer in enumerate(self.base_net.level3):
+            enc_out_l3 = layer(enc_out_l3)
 
-        enc_out_l4_0 = self.base_net.level4_0(enc_out_l3, x)
-        for i, layer in enumerate(self.base_net.level4):
-            if i == 0:
-                enc_out_l4 = layer(enc_out_l4_0)
-            else:
-                enc_out_l4 = layer(enc_out_l4)
+        enc_out_l4_0 = self.base_net.level4_0(4, enc_out_l3, x)
+        enc_out_l4 = enc_out_l4_0
+        for _, layer in enumerate(self.base_net.level4):
+            enc_out_l4 = layer(enc_out_l4)
 
-        # print(enc_out_l4.shape)
         # bottom-up decoding
         bu_out = self.bu_dec_l1(enc_out_l4)
-        # print(bu_out.shape)
 
         # Decoding block
-        #bu_out = self.upsample(bu_out)
         bu_out = self.upsample_layers[0](bu_out)
-        # print(bu_out.shape)
         enc_out_l3_proj = self.merge_enc_dec_l2(enc_out_l3)
         bu_out = enc_out_l3_proj + bu_out
         bu_out = self.bu_br_l2(bu_out)
@@ -137,22 +129,21 @@ class ESPNetV2Fusion(nn.Module):
         cls_score, bbox_pred, centerness, occlusion = self.rpn([bu_out])
 
         #decoding block
-        #bu_out = self.upsample(bu_out)
         bu_out = self.upsample_layers[1](bu_out)
         enc_out_l2_proj = self.merge_enc_dec_l3(enc_out_l2)
         bu_out = enc_out_l2_proj + bu_out
         bu_out = self.bu_br_l3(bu_out)
         bu_out = self.bu_dec_l3(bu_out)
 
+
         # decoding block
-        #bu_out = self.upsample(bu_out)
         bu_out = self.upsample_layers[2](bu_out)
         enc_out_l1_proj = self.merge_enc_dec_l4(enc_out_l1)
         bu_out = enc_out_l1_proj + bu_out
         bu_out = self.bu_br_l4(bu_out)
         bu_out  = self.bu_dec_l4(bu_out)
-        print(bu_out.shape)
-        seg_out = F.interpolate(bu_out, size=x_size, mode='bilinear', align_corners=True)
 
-        #return F.interpolate(bu_out, size=x_size, mode='bilinear', align_corners=True)
-        return cls_score, bbox_pred, centerness, occlusion, seg_out
+        return cls_score, bbox_pred, centerness, occlusion, bu_out
+
+        # seg_out = F.interpolate(bu_out, size=x_size, mode='bilinear', align_corners=True)
+        # return cls_score, bbox_pred, centerness, occlusion, seg_out

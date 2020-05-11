@@ -1,0 +1,431 @@
+7767517
+429 545
+Input            data             0 1 data 0=640 1=480 2=3
+Split            splitncnn_0      1 4 data data_splitncnn_0 data_splitncnn_1 data_splitncnn_2 data_splitncnn_3
+Convolution      conv0            1 1 data_splitncnn_3 conv0 0=32 1=3 2=1 3=2 4=1 5=0 6=864
+PReLU            prelu0           1 1 conv0 prelu0 0=32
+Split            splitncnn_1      1 4 prelu0 prelu0_splitncnn_0 prelu0_splitncnn_1 prelu0_splitncnn_2 prelu0_splitncnn_3
+Pooling          pool1            1 1 prelu0_splitncnn_3 pool1 0=1 1=3 2=2 3=0 4=0
+ConvolutionDepthWise conv2            1 1 prelu0_splitncnn_2 conv2 0=8 1=1 2=1 3=1 4=0 5=0 6=64 7=4
+PReLU            prelu2           1 1 conv2 prelu2 0=8
+Split            splitncnn_2      1 4 prelu2 prelu2_splitncnn_0 prelu2_splitncnn_1 prelu2_splitncnn_2 prelu2_splitncnn_3
+ConvolutionDepthWise conv3            1 1 prelu2_splitncnn_3 conv3 0=8 1=3 2=1 3=2 4=1 5=0 6=72 7=8
+Split            splitncnn_3      1 2 conv3 conv3_splitncnn_0 conv3_splitncnn_1
+ConvolutionDepthWise conv4            1 1 prelu2_splitncnn_2 conv4 0=8 1=3 2=2 3=2 4=2 5=0 6=72 7=8
+ConvolutionDepthWise conv5            1 1 prelu2_splitncnn_1 conv5 0=8 1=3 2=3 3=2 4=3 5=0 6=72 7=8
+ConvolutionDepthWise conv6            1 1 prelu2_splitncnn_0 conv6 0=8 1=3 2=4 3=2 4=4 5=0 6=72 7=8
+Eltwise          add7             2 1 conv3_splitncnn_1 conv4 add7 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_4      1 2 add7 add7_splitncnn_0 add7_splitncnn_1
+Eltwise          add8             2 1 add7_splitncnn_1 conv5 add8 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_5      1 2 add8 add8_splitncnn_0 add8_splitncnn_1
+Eltwise          add9             2 1 add8_splitncnn_1 conv6 add9 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat10            4 1 conv3_splitncnn_0 add7_splitncnn_0 add8_splitncnn_0 add9 cat10 0=0
+BatchNorm        bn10             1 1 cat10 bn10 0=32
+PReLU            prelu10          1 1 bn10 prelu10 0=32
+ConvolutionDepthWise conv11           1 1 prelu10 conv11 0=32 1=1 2=1 3=1 4=0 5=0 6=256 7=4
+Concat           cat12            2 1 conv11 pool1 cat12 0=0
+Pooling          pool12           1 1 data_splitncnn_2 pool12 0=1 1=3 2=2 3=0 4=0
+Pooling          pool14           1 1 pool12 pool14 0=1 1=3 2=2 3=0 4=0
+Convolution      conv14           1 1 pool14 conv14 0=3 1=3 2=1 3=1 4=1 5=0 6=81
+PReLU            prelu14          1 1 conv14 prelu14 0=3
+Convolution      conv15           1 1 prelu14 conv15 0=64 1=1 2=1 3=1 4=0 5=0 6=192
+Eltwise          add16            2 1 conv15 cat12 add16 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu17          1 1 add16 prelu17 0=64
+Split            splitncnn_6      1 4 prelu17 prelu17_splitncnn_0 prelu17_splitncnn_1 prelu17_splitncnn_2 prelu17_splitncnn_3
+Pooling          pool18           1 1 prelu17_splitncnn_3 pool18 0=1 1=3 2=2 3=0 4=0
+ConvolutionDepthWise conv19           1 1 prelu17_splitncnn_2 conv19 0=16 1=1 2=1 3=1 4=0 5=0 6=256 7=4
+PReLU            prelu19          1 1 conv19 prelu19 0=16
+Split            splitncnn_7      1 4 prelu19 prelu19_splitncnn_0 prelu19_splitncnn_1 prelu19_splitncnn_2 prelu19_splitncnn_3
+ConvolutionDepthWise conv20           1 1 prelu19_splitncnn_3 conv20 0=16 1=3 2=1 3=2 4=1 5=0 6=144 7=16
+Split            splitncnn_8      1 2 conv20 conv20_splitncnn_0 conv20_splitncnn_1
+ConvolutionDepthWise conv21           1 1 prelu19_splitncnn_2 conv21 0=16 1=3 2=2 3=2 4=2 5=0 6=144 7=16
+ConvolutionDepthWise conv22           1 1 prelu19_splitncnn_1 conv22 0=16 1=3 2=3 3=2 4=3 5=0 6=144 7=16
+ConvolutionDepthWise conv23           1 1 prelu19_splitncnn_0 conv23 0=16 1=3 2=4 3=2 4=4 5=0 6=144 7=16
+Eltwise          add24            2 1 conv20_splitncnn_1 conv21 add24 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_9      1 2 add24 add24_splitncnn_0 add24_splitncnn_1
+Eltwise          add25            2 1 add24_splitncnn_1 conv22 add25 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_10     1 2 add25 add25_splitncnn_0 add25_splitncnn_1
+Eltwise          add26            2 1 add25_splitncnn_1 conv23 add26 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat27            4 1 conv20_splitncnn_0 add24_splitncnn_0 add25_splitncnn_0 add26 cat27 0=0
+BatchNorm        bn27             1 1 cat27 bn27 0=64
+PReLU            prelu27          1 1 bn27 prelu27 0=64
+ConvolutionDepthWise conv28           1 1 prelu27 conv28 0=64 1=1 2=1 3=1 4=0 5=0 6=1024 7=4
+Concat           cat29            2 1 conv28 pool18 cat29 0=0
+Pooling          pool29           1 1 data_splitncnn_1 pool29 0=1 1=3 2=2 3=0 4=0
+Pooling          pool31           1 1 pool29 pool31 0=1 1=3 2=2 3=0 4=0
+Pooling          pool33           1 1 pool31 pool33 0=1 1=3 2=2 3=0 4=0
+Convolution      conv32           1 1 pool33 conv32 0=3 1=3 2=1 3=1 4=1 5=0 6=81
+PReLU            prelu32          1 1 conv32 prelu32 0=3
+Convolution      conv33           1 1 prelu32 conv33 0=128 1=1 2=1 3=1 4=0 5=0 6=384
+Eltwise          add34            2 1 conv33 cat29 add34 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu35          1 1 add34 prelu35 0=128
+Split            splitncnn_11     1 2 prelu35 prelu35_splitncnn_0 prelu35_splitncnn_1
+ConvolutionDepthWise conv36           1 1 prelu35_splitncnn_1 conv36 0=32 1=1 2=1 3=1 4=0 5=0 6=1024 7=4
+PReLU            prelu36          1 1 conv36 prelu36 0=32
+Split            splitncnn_12     1 4 prelu36 prelu36_splitncnn_0 prelu36_splitncnn_1 prelu36_splitncnn_2 prelu36_splitncnn_3
+ConvolutionDepthWise conv37           1 1 prelu36_splitncnn_3 conv37 0=32 1=3 2=1 3=1 4=1 5=0 6=288 7=32
+Split            splitncnn_13     1 2 conv37 conv37_splitncnn_0 conv37_splitncnn_1
+ConvolutionDepthWise conv38           1 1 prelu36_splitncnn_2 conv38 0=32 1=3 2=2 3=1 4=2 5=0 6=288 7=32
+ConvolutionDepthWise conv39           1 1 prelu36_splitncnn_1 conv39 0=32 1=3 2=3 3=1 4=3 5=0 6=288 7=32
+ConvolutionDepthWise conv40           1 1 prelu36_splitncnn_0 conv40 0=32 1=3 2=4 3=1 4=4 5=0 6=288 7=32
+Eltwise          add41            2 1 conv37_splitncnn_1 conv38 add41 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_14     1 2 add41 add41_splitncnn_0 add41_splitncnn_1
+Eltwise          add42            2 1 add41_splitncnn_1 conv39 add42 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_15     1 2 add42 add42_splitncnn_0 add42_splitncnn_1
+Eltwise          add43            2 1 add42_splitncnn_1 conv40 add43 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat44            4 1 conv37_splitncnn_0 add41_splitncnn_0 add42_splitncnn_0 add43 cat44 0=0
+BatchNorm        bn44             1 1 cat44 bn44 0=128
+PReLU            prelu44          1 1 bn44 prelu44 0=128
+ConvolutionDepthWise conv45           1 1 prelu44 conv45 0=128 1=1 2=1 3=1 4=0 5=0 6=4096 7=4
+Eltwise          add46            2 1 prelu35_splitncnn_0 conv45 add46 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu46          1 1 add46 prelu46 0=128
+Split            splitncnn_16     1 2 prelu46 prelu46_splitncnn_0 prelu46_splitncnn_1
+ConvolutionDepthWise conv47           1 1 prelu46_splitncnn_1 conv47 0=32 1=1 2=1 3=1 4=0 5=0 6=1024 7=4
+PReLU            prelu47          1 1 conv47 prelu47 0=32
+Split            splitncnn_17     1 4 prelu47 prelu47_splitncnn_0 prelu47_splitncnn_1 prelu47_splitncnn_2 prelu47_splitncnn_3
+ConvolutionDepthWise conv48           1 1 prelu47_splitncnn_3 conv48 0=32 1=3 2=1 3=1 4=1 5=0 6=288 7=32
+Split            splitncnn_18     1 2 conv48 conv48_splitncnn_0 conv48_splitncnn_1
+ConvolutionDepthWise conv49           1 1 prelu47_splitncnn_2 conv49 0=32 1=3 2=2 3=1 4=2 5=0 6=288 7=32
+ConvolutionDepthWise conv50           1 1 prelu47_splitncnn_1 conv50 0=32 1=3 2=3 3=1 4=3 5=0 6=288 7=32
+ConvolutionDepthWise conv51           1 1 prelu47_splitncnn_0 conv51 0=32 1=3 2=4 3=1 4=4 5=0 6=288 7=32
+Eltwise          add52            2 1 conv48_splitncnn_1 conv49 add52 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_19     1 2 add52 add52_splitncnn_0 add52_splitncnn_1
+Eltwise          add53            2 1 add52_splitncnn_1 conv50 add53 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_20     1 2 add53 add53_splitncnn_0 add53_splitncnn_1
+Eltwise          add54            2 1 add53_splitncnn_1 conv51 add54 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat55            4 1 conv48_splitncnn_0 add52_splitncnn_0 add53_splitncnn_0 add54 cat55 0=0
+BatchNorm        bn55             1 1 cat55 bn55 0=128
+PReLU            prelu55          1 1 bn55 prelu55 0=128
+ConvolutionDepthWise conv56           1 1 prelu55 conv56 0=128 1=1 2=1 3=1 4=0 5=0 6=4096 7=4
+Eltwise          add57            2 1 prelu46_splitncnn_0 conv56 add57 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu57          1 1 add57 prelu57 0=128
+Split            splitncnn_21     1 2 prelu57 prelu57_splitncnn_0 prelu57_splitncnn_1
+ConvolutionDepthWise conv58           1 1 prelu57_splitncnn_1 conv58 0=32 1=1 2=1 3=1 4=0 5=0 6=1024 7=4
+PReLU            prelu58          1 1 conv58 prelu58 0=32
+Split            splitncnn_22     1 4 prelu58 prelu58_splitncnn_0 prelu58_splitncnn_1 prelu58_splitncnn_2 prelu58_splitncnn_3
+ConvolutionDepthWise conv59           1 1 prelu58_splitncnn_3 conv59 0=32 1=3 2=1 3=1 4=1 5=0 6=288 7=32
+Split            splitncnn_23     1 2 conv59 conv59_splitncnn_0 conv59_splitncnn_1
+ConvolutionDepthWise conv60           1 1 prelu58_splitncnn_2 conv60 0=32 1=3 2=2 3=1 4=2 5=0 6=288 7=32
+ConvolutionDepthWise conv61           1 1 prelu58_splitncnn_1 conv61 0=32 1=3 2=3 3=1 4=3 5=0 6=288 7=32
+ConvolutionDepthWise conv62           1 1 prelu58_splitncnn_0 conv62 0=32 1=3 2=4 3=1 4=4 5=0 6=288 7=32
+Eltwise          add63            2 1 conv59_splitncnn_1 conv60 add63 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_24     1 2 add63 add63_splitncnn_0 add63_splitncnn_1
+Eltwise          add64            2 1 add63_splitncnn_1 conv61 add64 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_25     1 2 add64 add64_splitncnn_0 add64_splitncnn_1
+Eltwise          add65            2 1 add64_splitncnn_1 conv62 add65 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat66            4 1 conv59_splitncnn_0 add63_splitncnn_0 add64_splitncnn_0 add65 cat66 0=0
+BatchNorm        bn66             1 1 cat66 bn66 0=128
+PReLU            prelu66          1 1 bn66 prelu66 0=128
+ConvolutionDepthWise conv67           1 1 prelu66 conv67 0=128 1=1 2=1 3=1 4=0 5=0 6=4096 7=4
+Eltwise          add68            2 1 prelu57_splitncnn_0 conv67 add68 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu68          1 1 add68 prelu68 0=128
+Split            splitncnn_26     1 4 prelu68 prelu68_splitncnn_0 prelu68_splitncnn_1 prelu68_splitncnn_2 prelu68_splitncnn_3
+Pooling          pool69           1 1 prelu68_splitncnn_3 pool69 0=1 1=3 2=2 3=0 4=0
+ConvolutionDepthWise conv70           1 1 prelu68_splitncnn_2 conv70 0=32 1=1 2=1 3=1 4=0 5=0 6=1024 7=4
+PReLU            prelu70          1 1 conv70 prelu70 0=32
+Split            splitncnn_27     1 4 prelu70 prelu70_splitncnn_0 prelu70_splitncnn_1 prelu70_splitncnn_2 prelu70_splitncnn_3
+ConvolutionDepthWise conv71           1 1 prelu70_splitncnn_3 conv71 0=32 1=3 2=1 3=2 4=1 5=0 6=288 7=32
+Split            splitncnn_28     1 2 conv71 conv71_splitncnn_0 conv71_splitncnn_1
+ConvolutionDepthWise conv72           1 1 prelu70_splitncnn_2 conv72 0=32 1=3 2=2 3=2 4=2 5=0 6=288 7=32
+ConvolutionDepthWise conv73           1 1 prelu70_splitncnn_1 conv73 0=32 1=3 2=3 3=2 4=3 5=0 6=288 7=32
+ConvolutionDepthWise conv74           1 1 prelu70_splitncnn_0 conv74 0=32 1=3 2=4 3=2 4=4 5=0 6=288 7=32
+Eltwise          add75            2 1 conv71_splitncnn_1 conv72 add75 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_29     1 2 add75 add75_splitncnn_0 add75_splitncnn_1
+Eltwise          add76            2 1 add75_splitncnn_1 conv73 add76 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_30     1 2 add76 add76_splitncnn_0 add76_splitncnn_1
+Eltwise          add77            2 1 add76_splitncnn_1 conv74 add77 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat78            4 1 conv71_splitncnn_0 add75_splitncnn_0 add76_splitncnn_0 add77 cat78 0=0
+BatchNorm        bn78             1 1 cat78 bn78 0=128
+PReLU            prelu78          1 1 bn78 prelu78 0=128
+ConvolutionDepthWise conv79           1 1 prelu78 conv79 0=128 1=1 2=1 3=1 4=0 5=0 6=4096 7=4
+Concat           cat80            2 1 conv79 pool69 cat80 0=0
+Pooling          pool80           1 1 data_splitncnn_0 pool80 0=1 1=3 2=2 3=0 4=0
+Pooling          pool82           1 1 pool80 pool82 0=1 1=3 2=2 3=0 4=0
+Pooling          pool84           1 1 pool82 pool84 0=1 1=3 2=2 3=0 4=0
+Pooling          pool86           1 1 pool84 pool86 0=1 1=3 2=2 3=0 4=0
+Convolution      conv84           1 1 pool86 conv84 0=3 1=3 2=1 3=1 4=1 5=0 6=81
+PReLU            prelu84          1 1 conv84 prelu84 0=3
+Convolution      conv85           1 1 prelu84 conv85 0=256 1=1 2=1 3=1 4=0 5=0 6=768
+Eltwise          add86            2 1 conv85 cat80 add86 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu87          1 1 add86 prelu87 0=256
+Split            splitncnn_31     1 2 prelu87 prelu87_splitncnn_0 prelu87_splitncnn_1
+ConvolutionDepthWise conv88           1 1 prelu87_splitncnn_1 conv88 0=64 1=1 2=1 3=1 4=0 5=0 6=4096 7=4
+PReLU            prelu88          1 1 conv88 prelu88 0=64
+Split            splitncnn_32     1 4 prelu88 prelu88_splitncnn_0 prelu88_splitncnn_1 prelu88_splitncnn_2 prelu88_splitncnn_3
+ConvolutionDepthWise conv89           1 1 prelu88_splitncnn_3 conv89 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+Split            splitncnn_33     1 2 conv89 conv89_splitncnn_0 conv89_splitncnn_1
+ConvolutionDepthWise conv90           1 1 prelu88_splitncnn_2 conv90 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+ConvolutionDepthWise conv91           1 1 prelu88_splitncnn_1 conv91 0=64 1=3 2=2 3=1 4=2 5=0 6=576 7=64
+ConvolutionDepthWise conv92           1 1 prelu88_splitncnn_0 conv92 0=64 1=3 2=3 3=1 4=3 5=0 6=576 7=64
+Eltwise          add93            2 1 conv89_splitncnn_1 conv90 add93 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_34     1 2 add93 add93_splitncnn_0 add93_splitncnn_1
+Eltwise          add94            2 1 add93_splitncnn_1 conv91 add94 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_35     1 2 add94 add94_splitncnn_0 add94_splitncnn_1
+Eltwise          add95            2 1 add94_splitncnn_1 conv92 add95 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat96            4 1 conv89_splitncnn_0 add93_splitncnn_0 add94_splitncnn_0 add95 cat96 0=0
+BatchNorm        bn96             1 1 cat96 bn96 0=256
+PReLU            prelu96          1 1 bn96 prelu96 0=256
+ConvolutionDepthWise conv97           1 1 prelu96 conv97 0=256 1=1 2=1 3=1 4=0 5=0 6=16384 7=4
+Eltwise          add98            2 1 prelu87_splitncnn_0 conv97 add98 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu98          1 1 add98 prelu98 0=256
+Split            splitncnn_36     1 2 prelu98 prelu98_splitncnn_0 prelu98_splitncnn_1
+ConvolutionDepthWise conv99           1 1 prelu98_splitncnn_1 conv99 0=64 1=1 2=1 3=1 4=0 5=0 6=4096 7=4
+PReLU            prelu99          1 1 conv99 prelu99 0=64
+Split            splitncnn_37     1 4 prelu99 prelu99_splitncnn_0 prelu99_splitncnn_1 prelu99_splitncnn_2 prelu99_splitncnn_3
+ConvolutionDepthWise conv100          1 1 prelu99_splitncnn_3 conv100 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+Split            splitncnn_38     1 2 conv100 conv100_splitncnn_0 conv100_splitncnn_1
+ConvolutionDepthWise conv101          1 1 prelu99_splitncnn_2 conv101 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+ConvolutionDepthWise conv102          1 1 prelu99_splitncnn_1 conv102 0=64 1=3 2=2 3=1 4=2 5=0 6=576 7=64
+ConvolutionDepthWise conv103          1 1 prelu99_splitncnn_0 conv103 0=64 1=3 2=3 3=1 4=3 5=0 6=576 7=64
+Eltwise          add104           2 1 conv100_splitncnn_1 conv101 add104 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_39     1 2 add104 add104_splitncnn_0 add104_splitncnn_1
+Eltwise          add105           2 1 add104_splitncnn_1 conv102 add105 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_40     1 2 add105 add105_splitncnn_0 add105_splitncnn_1
+Eltwise          add106           2 1 add105_splitncnn_1 conv103 add106 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat107           4 1 conv100_splitncnn_0 add104_splitncnn_0 add105_splitncnn_0 add106 cat107 0=0
+BatchNorm        bn107            1 1 cat107 bn107 0=256
+PReLU            prelu107         1 1 bn107 prelu107 0=256
+ConvolutionDepthWise conv108          1 1 prelu107 conv108 0=256 1=1 2=1 3=1 4=0 5=0 6=16384 7=4
+Eltwise          add109           2 1 prelu98_splitncnn_0 conv108 add109 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu109         1 1 add109 prelu109 0=256
+Split            splitncnn_41     1 2 prelu109 prelu109_splitncnn_0 prelu109_splitncnn_1
+ConvolutionDepthWise conv110          1 1 prelu109_splitncnn_1 conv110 0=64 1=1 2=1 3=1 4=0 5=0 6=4096 7=4
+PReLU            prelu110         1 1 conv110 prelu110 0=64
+Split            splitncnn_42     1 4 prelu110 prelu110_splitncnn_0 prelu110_splitncnn_1 prelu110_splitncnn_2 prelu110_splitncnn_3
+ConvolutionDepthWise conv111          1 1 prelu110_splitncnn_3 conv111 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+Split            splitncnn_43     1 2 conv111 conv111_splitncnn_0 conv111_splitncnn_1
+ConvolutionDepthWise conv112          1 1 prelu110_splitncnn_2 conv112 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+ConvolutionDepthWise conv113          1 1 prelu110_splitncnn_1 conv113 0=64 1=3 2=2 3=1 4=2 5=0 6=576 7=64
+ConvolutionDepthWise conv114          1 1 prelu110_splitncnn_0 conv114 0=64 1=3 2=3 3=1 4=3 5=0 6=576 7=64
+Eltwise          add115           2 1 conv111_splitncnn_1 conv112 add115 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_44     1 2 add115 add115_splitncnn_0 add115_splitncnn_1
+Eltwise          add116           2 1 add115_splitncnn_1 conv113 add116 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_45     1 2 add116 add116_splitncnn_0 add116_splitncnn_1
+Eltwise          add117           2 1 add116_splitncnn_1 conv114 add117 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat118           4 1 conv111_splitncnn_0 add115_splitncnn_0 add116_splitncnn_0 add117 cat118 0=0
+BatchNorm        bn118            1 1 cat118 bn118 0=256
+PReLU            prelu118         1 1 bn118 prelu118 0=256
+ConvolutionDepthWise conv119          1 1 prelu118 conv119 0=256 1=1 2=1 3=1 4=0 5=0 6=16384 7=4
+Eltwise          add120           2 1 prelu109_splitncnn_0 conv119 add120 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu120         1 1 add120 prelu120 0=256
+Split            splitncnn_46     1 2 prelu120 prelu120_splitncnn_0 prelu120_splitncnn_1
+ConvolutionDepthWise conv121          1 1 prelu120_splitncnn_1 conv121 0=64 1=1 2=1 3=1 4=0 5=0 6=4096 7=4
+PReLU            prelu121         1 1 conv121 prelu121 0=64
+Split            splitncnn_47     1 4 prelu121 prelu121_splitncnn_0 prelu121_splitncnn_1 prelu121_splitncnn_2 prelu121_splitncnn_3
+ConvolutionDepthWise conv122          1 1 prelu121_splitncnn_3 conv122 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+Split            splitncnn_48     1 2 conv122 conv122_splitncnn_0 conv122_splitncnn_1
+ConvolutionDepthWise conv123          1 1 prelu121_splitncnn_2 conv123 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+ConvolutionDepthWise conv124          1 1 prelu121_splitncnn_1 conv124 0=64 1=3 2=2 3=1 4=2 5=0 6=576 7=64
+ConvolutionDepthWise conv125          1 1 prelu121_splitncnn_0 conv125 0=64 1=3 2=3 3=1 4=3 5=0 6=576 7=64
+Eltwise          add126           2 1 conv122_splitncnn_1 conv123 add126 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_49     1 2 add126 add126_splitncnn_0 add126_splitncnn_1
+Eltwise          add127           2 1 add126_splitncnn_1 conv124 add127 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_50     1 2 add127 add127_splitncnn_0 add127_splitncnn_1
+Eltwise          add128           2 1 add127_splitncnn_1 conv125 add128 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat129           4 1 conv122_splitncnn_0 add126_splitncnn_0 add127_splitncnn_0 add128 cat129 0=0
+BatchNorm        bn129            1 1 cat129 bn129 0=256
+PReLU            prelu129         1 1 bn129 prelu129 0=256
+ConvolutionDepthWise conv130          1 1 prelu129 conv130 0=256 1=1 2=1 3=1 4=0 5=0 6=16384 7=4
+Eltwise          add131           2 1 prelu120_splitncnn_0 conv130 add131 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu131         1 1 add131 prelu131 0=256
+Split            splitncnn_51     1 2 prelu131 prelu131_splitncnn_0 prelu131_splitncnn_1
+ConvolutionDepthWise conv132          1 1 prelu131_splitncnn_1 conv132 0=64 1=1 2=1 3=1 4=0 5=0 6=4096 7=4
+PReLU            prelu132         1 1 conv132 prelu132 0=64
+Split            splitncnn_52     1 4 prelu132 prelu132_splitncnn_0 prelu132_splitncnn_1 prelu132_splitncnn_2 prelu132_splitncnn_3
+ConvolutionDepthWise conv133          1 1 prelu132_splitncnn_3 conv133 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+Split            splitncnn_53     1 2 conv133 conv133_splitncnn_0 conv133_splitncnn_1
+ConvolutionDepthWise conv134          1 1 prelu132_splitncnn_2 conv134 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+ConvolutionDepthWise conv135          1 1 prelu132_splitncnn_1 conv135 0=64 1=3 2=2 3=1 4=2 5=0 6=576 7=64
+ConvolutionDepthWise conv136          1 1 prelu132_splitncnn_0 conv136 0=64 1=3 2=3 3=1 4=3 5=0 6=576 7=64
+Eltwise          add137           2 1 conv133_splitncnn_1 conv134 add137 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_54     1 2 add137 add137_splitncnn_0 add137_splitncnn_1
+Eltwise          add138           2 1 add137_splitncnn_1 conv135 add138 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_55     1 2 add138 add138_splitncnn_0 add138_splitncnn_1
+Eltwise          add139           2 1 add138_splitncnn_1 conv136 add139 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat140           4 1 conv133_splitncnn_0 add137_splitncnn_0 add138_splitncnn_0 add139 cat140 0=0
+BatchNorm        bn140            1 1 cat140 bn140 0=256
+PReLU            prelu140         1 1 bn140 prelu140 0=256
+ConvolutionDepthWise conv141          1 1 prelu140 conv141 0=256 1=1 2=1 3=1 4=0 5=0 6=16384 7=4
+Eltwise          add142           2 1 prelu131_splitncnn_0 conv141 add142 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu142         1 1 add142 prelu142 0=256
+Split            splitncnn_56     1 2 prelu142 prelu142_splitncnn_0 prelu142_splitncnn_1
+ConvolutionDepthWise conv143          1 1 prelu142_splitncnn_1 conv143 0=64 1=1 2=1 3=1 4=0 5=0 6=4096 7=4
+PReLU            prelu143         1 1 conv143 prelu143 0=64
+Split            splitncnn_57     1 4 prelu143 prelu143_splitncnn_0 prelu143_splitncnn_1 prelu143_splitncnn_2 prelu143_splitncnn_3
+ConvolutionDepthWise conv144          1 1 prelu143_splitncnn_3 conv144 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+Split            splitncnn_58     1 2 conv144 conv144_splitncnn_0 conv144_splitncnn_1
+ConvolutionDepthWise conv145          1 1 prelu143_splitncnn_2 conv145 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+ConvolutionDepthWise conv146          1 1 prelu143_splitncnn_1 conv146 0=64 1=3 2=2 3=1 4=2 5=0 6=576 7=64
+ConvolutionDepthWise conv147          1 1 prelu143_splitncnn_0 conv147 0=64 1=3 2=3 3=1 4=3 5=0 6=576 7=64
+Eltwise          add148           2 1 conv144_splitncnn_1 conv145 add148 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_59     1 2 add148 add148_splitncnn_0 add148_splitncnn_1
+Eltwise          add149           2 1 add148_splitncnn_1 conv146 add149 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_60     1 2 add149 add149_splitncnn_0 add149_splitncnn_1
+Eltwise          add150           2 1 add149_splitncnn_1 conv147 add150 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat151           4 1 conv144_splitncnn_0 add148_splitncnn_0 add149_splitncnn_0 add150 cat151 0=0
+BatchNorm        bn151            1 1 cat151 bn151 0=256
+PReLU            prelu151         1 1 bn151 prelu151 0=256
+ConvolutionDepthWise conv152          1 1 prelu151 conv152 0=256 1=1 2=1 3=1 4=0 5=0 6=16384 7=4
+Eltwise          add153           2 1 prelu142_splitncnn_0 conv152 add153 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu153         1 1 add153 prelu153 0=256
+Split            splitncnn_61     1 2 prelu153 prelu153_splitncnn_0 prelu153_splitncnn_1
+ConvolutionDepthWise conv154          1 1 prelu153_splitncnn_1 conv154 0=64 1=1 2=1 3=1 4=0 5=0 6=4096 7=4
+PReLU            prelu154         1 1 conv154 prelu154 0=64
+Split            splitncnn_62     1 4 prelu154 prelu154_splitncnn_0 prelu154_splitncnn_1 prelu154_splitncnn_2 prelu154_splitncnn_3
+ConvolutionDepthWise conv155          1 1 prelu154_splitncnn_3 conv155 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+Split            splitncnn_63     1 2 conv155 conv155_splitncnn_0 conv155_splitncnn_1
+ConvolutionDepthWise conv156          1 1 prelu154_splitncnn_2 conv156 0=64 1=3 2=1 3=1 4=1 5=0 6=576 7=64
+ConvolutionDepthWise conv157          1 1 prelu154_splitncnn_1 conv157 0=64 1=3 2=2 3=1 4=2 5=0 6=576 7=64
+ConvolutionDepthWise conv158          1 1 prelu154_splitncnn_0 conv158 0=64 1=3 2=3 3=1 4=3 5=0 6=576 7=64
+Eltwise          add159           2 1 conv155_splitncnn_1 conv156 add159 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_64     1 2 add159 add159_splitncnn_0 add159_splitncnn_1
+Eltwise          add160           2 1 add159_splitncnn_1 conv157 add160 0=1 -23301=2,1.000000e+00,1.000000e+00
+Split            splitncnn_65     1 2 add160 add160_splitncnn_0 add160_splitncnn_1
+Eltwise          add161           2 1 add160_splitncnn_1 conv158 add161 0=1 -23301=2,1.000000e+00,1.000000e+00
+Concat           cat162           4 1 conv155_splitncnn_0 add159_splitncnn_0 add160_splitncnn_0 add161 cat162 0=0
+BatchNorm        bn162            1 1 cat162 bn162 0=256
+PReLU            prelu162         1 1 bn162 prelu162 0=256
+ConvolutionDepthWise conv163          1 1 prelu162 conv163 0=256 1=1 2=1 3=1 4=0 5=0 6=16384 7=4
+Eltwise          add164           2 1 prelu153_splitncnn_0 conv163 add164 0=1 -23301=2,1.000000e+00,1.000000e+00
+PReLU            prelu164         1 1 add164 prelu164 0=256
+Convolution      conv165          1 1 prelu164 conv165 0=10 1=1 2=1 3=1 4=0 5=0 6=2560
+PReLU            prelu165         1 1 conv165 prelu165 0=10
+Split            splitncnn_66     1 4 prelu165 prelu165_splitncnn_0 prelu165_splitncnn_1 prelu165_splitncnn_2 prelu165_splitncnn_3
+DeconvolutionDepthWise deconv166        1 1 prelu165_splitncnn_3 deconv166 0=10 1=4 2=1 3=2 4=1 5=0 6=160 7=10
+ConvolutionDepthWise conv167          1 1 deconv166 conv167 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+Pooling          pool168          1 1 conv167 pool168 0=1 1=4 2=2 3=1 4=0
+ConvolutionDepthWise conv169          1 1 prelu165_splitncnn_2 conv169 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+Pooling          pool170          1 1 prelu165_splitncnn_1 pool170 0=1 1=4 2=2 3=1 4=0
+ConvolutionDepthWise conv171          1 1 pool170 conv171 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+DeconvolutionDepthWise deconv172        1 1 conv171 deconv172 0=10 1=4 2=1 3=2 4=1 5=0 6=160 7=10
+Pooling          pool173          1 1 prelu165_splitncnn_0 pool173 0=1 1=12 2=10 3=1 4=0
+ConvolutionDepthWise conv174          1 1 pool173 conv174 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+DeconvolutionDepthWise deconv175        1 1 conv174 deconv175 0=10 1=12 2=1 3=10 4=1 5=0 6=1440 7=10
+Concat           cat176           4 1 pool168 conv169 deconv172 deconv175 cat176 0=0
+BatchNorm        bn177            1 1 cat176 bn177 0=40
+PReLU            prelu177         1 1 bn177 prelu177 0=40
+ConvolutionDepthWise conv178          1 1 prelu177 conv178 0=10 1=3 2=1 3=1 4=1 5=0 6=360 7=10
+PReLU            prelu178         1 1 conv178 prelu178 0=10
+Convolution      conv179          1 1 prelu178 conv179 0=64 1=1 2=1 3=1 4=0 5=0 6=640
+BatchNorm        bn180            1 1 conv179 bn180 0=64
+PReLU            prelu180         1 1 bn180 prelu180 0=64
+Deconvolution    deconv181        1 1 prelu180 deconv181 0=64 1=4 2=1 3=2 4=1 5=0 6=65536
+Pooling          pool182          1 1 prelu68_splitncnn_1 pool182 0=1 1=0 2=1 3=0 4=1
+Convolution      conv182          1 1 pool182 conv182 0=64 1=1 2=1 3=1 4=0 5=0 6=8192
+Sigmoid          sigmo182         1 1 conv182 sigmo182
+Tile             tile182          1 1 sigmo182 tile182
+Reshape          reshape182       1 1 tile182 reshape182 0=80 1=60 2=64 3=0
+ConvolutionDepthWise conv183          1 1 prelu68_splitncnn_0 conv183 0=64 1=3 2=1 3=1 4=1 5=0 6=1152 7=64
+PReLU            prelu183         1 1 conv183 prelu183 0=64
+Eltwise          prod184          2 1 reshape182 prelu183 prod184 0=0 -23301=0
+Eltwise          add185           2 1 prod184 deconv181 add185 0=1 -23301=2,1.000000e+00,1.000000e+00
+BatchNorm        bn186            1 1 add185 bn186 0=64
+PReLU            prelu186         1 1 bn186 prelu186 0=64
+Convolution      conv187          1 1 prelu186 conv187 0=10 1=1 2=1 3=1 4=0 5=0 6=640
+PReLU            prelu187         1 1 conv187 prelu187 0=10
+Split            splitncnn_67     1 4 prelu187 prelu187_splitncnn_0 prelu187_splitncnn_1 prelu187_splitncnn_2 prelu187_splitncnn_3
+DeconvolutionDepthWise deconv188        1 1 prelu187_splitncnn_3 deconv188 0=10 1=4 2=1 3=2 4=1 5=0 6=160 7=10
+ConvolutionDepthWise conv189          1 1 deconv188 conv189 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+Pooling          pool190          1 1 conv189 pool190 0=1 1=4 2=2 3=1 4=0
+ConvolutionDepthWise conv191          1 1 prelu187_splitncnn_2 conv191 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+Pooling          pool192          1 1 prelu187_splitncnn_1 pool192 0=1 1=4 2=2 3=1 4=0
+ConvolutionDepthWise conv193          1 1 pool192 conv193 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+DeconvolutionDepthWise deconv194        1 1 conv193 deconv194 0=10 1=4 2=1 3=2 4=1 5=0 6=160 7=10
+Pooling          pool195          1 1 prelu187_splitncnn_0 pool195 0=1 1=12 2=10 3=1 4=0
+ConvolutionDepthWise conv196          1 1 pool195 conv196 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+DeconvolutionDepthWise deconv197        1 1 conv196 deconv197 0=10 1=12 2=1 3=10 4=1 5=0 6=1440 7=10
+Concat           cat198           4 1 pool190 conv191 deconv194 deconv197 cat198 0=0
+BatchNorm        bn199            1 1 cat198 bn199 0=40
+PReLU            prelu199         1 1 bn199 prelu199 0=40
+ConvolutionDepthWise conv200          1 1 prelu199 conv200 0=10 1=3 2=1 3=1 4=1 5=0 6=360 7=10
+PReLU            prelu200         1 1 conv200 prelu200 0=10
+Convolution      conv201          1 1 prelu200 conv201 0=48 1=1 2=1 3=1 4=0 5=0 6=480
+BatchNorm        bn202            1 1 conv201 bn202 0=48
+PReLU            prelu202         1 1 bn202 prelu202 0=48
+Split            splitncnn_68     1 2 prelu202 prelu202_splitncnn_0 prelu202_splitncnn_1
+Convolution      conv203          1 1 prelu202_splitncnn_1 conv203 0=48 1=3 2=1 3=1 4=1 5=1 6=20736
+ReLU             conv203_relu     1 1 conv203 conv203_conv203_relu
+Convolution      conv204          1 1 conv203_conv203_relu conv204 0=48 1=3 2=1 3=1 4=1 5=1 6=20736
+ReLU             conv204_relu     1 1 conv204 conv204_conv204_relu
+Convolution      conv205          1 1 conv204_conv204_relu conv205 0=48 1=3 2=1 3=1 4=1 5=1 6=20736
+ReLU             conv205_relu     1 1 conv205 conv205_conv205_relu
+Convolution      conv206          1 1 conv205_conv205_relu conv206 0=48 1=3 2=1 3=1 4=1 5=1 6=20736
+ReLU             conv206_relu     1 1 conv206 conv206_conv206_relu
+Split            splitncnn_69     1 4 conv206_conv206_relu conv206_conv206_relu_splitncnn_0 conv206_conv206_relu_splitncnn_1 conv206_conv206_relu_splitncnn_2 conv206_conv206_relu_splitncnn_3
+Convolution      conv207          1 1 conv206_conv206_relu_splitncnn_3 conv207 0=2 1=1 2=1 3=1 4=0 5=1 6=96
+Convolution      conv208          1 1 conv206_conv206_relu_splitncnn_2 conv208 0=1 1=1 2=1 3=1 4=0 5=1 6=48
+Convolution      conv209          1 1 conv206_conv206_relu_splitncnn_1 conv209 0=8 1=1 2=1 3=1 4=0 5=1 6=384
+Convolution      conv210          1 1 conv206_conv206_relu_splitncnn_0 conv210 0=8 1=1 2=1 3=1 4=0 5=1 6=384
+Sigmoid          cls_score        1 1 conv207 cls_score
+Sigmoid          centerness       1 1 conv208 centerness
+Sigmoid          occlusion        1 1 conv210 occlusion
+Permute          scoremap_perm    1 1 cls_score scoremap_perm 0=3
+Permute          centernessmap_perm 1 1 centerness centernessmap_perm 0=3
+Permute          occlusionmap_perm 1 1 occlusion occlusionmap_perm 0=3
+Permute          regressionmap_perm 1 1 conv209 regressionmap_perm 0=3
+Deconvolution    deconv211        1 1 prelu202_splitncnn_0 deconv211 0=48 1=4 2=1 3=2 4=1 5=0 6=36864
+Pooling          pool212          1 1 prelu17_splitncnn_1 pool212 0=1 1=0 2=1 3=0 4=1
+Convolution      conv212          1 1 pool212 conv212 0=48 1=1 2=1 3=1 4=0 5=0 6=3072
+Sigmoid          sigmo212         1 1 conv212 sigmo212
+Tile             tile212          1 1 sigmo212 tile212
+Reshape          reshape212       1 1 tile212 reshape212 0=160 1=120 2=48 3=0
+ConvolutionDepthWise conv213          1 1 prelu17_splitncnn_0 conv213 0=48 1=3 2=1 3=1 4=1 5=0 6=1728 7=16
+PReLU            prelu213         1 1 conv213 prelu213 0=48
+Eltwise          prod214          2 1 reshape212 prelu213 prod214 0=0 -23301=0
+Eltwise          add215           2 1 prod214 deconv211 add215 0=1 -23301=2,1.000000e+00,1.000000e+00
+BatchNorm        bn216            1 1 add215 bn216 0=48
+PReLU            prelu216         1 1 bn216 prelu216 0=48
+Convolution      conv217          1 1 prelu216 conv217 0=10 1=1 2=1 3=1 4=0 5=0 6=480
+PReLU            prelu217         1 1 conv217 prelu217 0=10
+Split            splitncnn_70     1 4 prelu217 prelu217_splitncnn_0 prelu217_splitncnn_1 prelu217_splitncnn_2 prelu217_splitncnn_3
+DeconvolutionDepthWise deconv218        1 1 prelu217_splitncnn_3 deconv218 0=10 1=4 2=1 3=2 4=1 5=0 6=160 7=10
+ConvolutionDepthWise conv219          1 1 deconv218 conv219 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+Pooling          pool220          1 1 conv219 pool220 0=1 1=4 2=2 3=1 4=0
+ConvolutionDepthWise conv221          1 1 prelu217_splitncnn_2 conv221 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+Pooling          pool222          1 1 prelu217_splitncnn_1 pool222 0=1 1=4 2=2 3=1 4=0
+ConvolutionDepthWise conv223          1 1 pool222 conv223 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+DeconvolutionDepthWise deconv224        1 1 conv223 deconv224 0=10 1=4 2=1 3=2 4=1 5=0 6=160 7=10
+Pooling          pool225          1 1 prelu217_splitncnn_0 pool225 0=1 1=12 2=10 3=1 4=0
+ConvolutionDepthWise conv226          1 1 pool225 conv226 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+DeconvolutionDepthWise deconv227        1 1 conv226 deconv227 0=10 1=12 2=1 3=10 4=1 5=0 6=1440 7=10
+Concat           cat228           4 1 pool220 conv221 deconv224 deconv227 cat228 0=0
+BatchNorm        bn229            1 1 cat228 bn229 0=40
+PReLU            prelu229         1 1 bn229 prelu229 0=40
+ConvolutionDepthWise conv230          1 1 prelu229 conv230 0=10 1=3 2=1 3=1 4=1 5=0 6=360 7=10
+PReLU            prelu230         1 1 conv230 prelu230 0=10
+Convolution      conv231          1 1 prelu230 conv231 0=32 1=1 2=1 3=1 4=0 5=0 6=320
+BatchNorm        bn232            1 1 conv231 bn232 0=32
+PReLU            prelu232         1 1 bn232 prelu232 0=32
+Deconvolution    deconv233        1 1 prelu232 deconv233 0=32 1=4 2=1 3=2 4=1 5=0 6=16384
+Pooling          pool234          1 1 prelu0_splitncnn_1 pool234 0=1 1=0 2=1 3=0 4=1
+Convolution      conv234          1 1 pool234 conv234 0=32 1=1 2=1 3=1 4=0 5=0 6=1024
+Sigmoid          sigmo234         1 1 conv234 sigmo234
+Tile             tile234          1 1 sigmo234 tile234
+Reshape          reshape234       1 1 tile234 reshape234 0=320 1=240 2=32 3=0
+ConvolutionDepthWise conv235          1 1 prelu0_splitncnn_0 conv235 0=32 1=3 2=1 3=1 4=1 5=0 6=288 7=32
+PReLU            prelu235         1 1 conv235 prelu235 0=32
+Eltwise          prod236          2 1 reshape234 prelu235 prod236 0=0 -23301=0
+Eltwise          add237           2 1 prod236 deconv233 add237 0=1 -23301=2,1.000000e+00,1.000000e+00
+BatchNorm        bn238            1 1 add237 bn238 0=32
+PReLU            prelu238         1 1 bn238 prelu238 0=32
+Convolution      conv239          1 1 prelu238 conv239 0=10 1=1 2=1 3=1 4=0 5=0 6=320
+PReLU            prelu239         1 1 conv239 prelu239 0=10
+Split            splitncnn_71     1 4 prelu239 prelu239_splitncnn_0 prelu239_splitncnn_1 prelu239_splitncnn_2 prelu239_splitncnn_3
+DeconvolutionDepthWise deconv240        1 1 prelu239_splitncnn_3 deconv240 0=10 1=4 2=1 3=2 4=1 5=0 6=160 7=10
+ConvolutionDepthWise conv241          1 1 deconv240 conv241 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+Pooling          pool242          1 1 conv241 pool242 0=1 1=4 2=2 3=1 4=0
+ConvolutionDepthWise conv243          1 1 prelu239_splitncnn_2 conv243 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+Pooling          pool244          1 1 prelu239_splitncnn_1 pool244 0=1 1=4 2=2 3=1 4=0
+ConvolutionDepthWise conv245          1 1 pool244 conv245 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+DeconvolutionDepthWise deconv246        1 1 conv245 deconv246 0=10 1=4 2=1 3=2 4=1 5=0 6=160 7=10
+Pooling          pool247          1 1 prelu239_splitncnn_0 pool247 0=1 1=12 2=10 3=1 4=0
+ConvolutionDepthWise conv248          1 1 pool247 conv248 0=10 1=3 2=1 3=1 4=1 5=0 6=90 7=10
+DeconvolutionDepthWise deconv249        1 1 conv248 deconv249 0=10 1=12 2=1 3=10 4=1 5=0 6=1440 7=10
+Concat           cat250           4 1 pool242 conv243 deconv246 deconv249 cat250 0=0
+BatchNorm        bn251            1 1 cat250 bn251 0=40
+PReLU            prelu251         1 1 bn251 prelu251 0=40
+ConvolutionDepthWise conv252          1 1 prelu251 conv252 0=10 1=3 2=1 3=1 4=1 5=0 6=360 7=10
+PReLU            prelu252         1 1 conv252 prelu252 0=10
+Convolution      conv253          1 1 prelu252 conv253 0=20 1=1 2=1 3=1 4=0 5=0 6=200
+BatchNorm        bn254            1 1 conv253 bn254 0=20
+PReLU            prelu254         1 1 bn254 prelu254 0=20
