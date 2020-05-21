@@ -35,6 +35,6 @@
         "fp16_mode": true
     },
     "trt":{
-        "engine": "/home/gw/Documents/NN-inference-using-SNPE/data/mnasneta1focs.engine"
+        "engine": "/home/gw/Documents/NN-inference-edge/data/mnasneta1fcos.engine"
     }
 }
