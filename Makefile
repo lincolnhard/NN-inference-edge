@@ -18,7 +18,7 @@ DEFINES += -D NDEBUG
 LDFLAGS += -L/usr/lib/aarch64-linux-gnu
 LDFLAGS += -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio -lopencv_dnn
 LDFLAGS += -lglog -lboost_system
-LDFLAGS += -lnvinfer -lnvparsers -lcuda -lnvinfer_plugin
+LDFLAGS += -lnvinfer -lnvparsers -lcuda -lnvinfer_plugin -lnvonnxparser -lnvonnxparser_runtime
 LDFLAGS += -L/usr/local/cuda-10.0/targets/aarch64-linux/lib
 LDFLAGS += -lcudart
 LDFLAGS += -pthread -lm
@@ -30,12 +30,13 @@ SRCFILES += $(wildcard src/nv/*.cpp)
 # SRCFILES += $(wildcard src/*.cu)
 
 
-
-# EXAMPLEFILES := examples/mobilenetv2unet_tensorrt.cpp
-# EXAMPLEFILES := examples/combine.cpp
-EXAMPLEFILES := examples/mnasneta1fcos_trt_debug.cpp
+# EXAMPLEFILES := examples/mobilenetv2ssd_trt_fps.cpp
+EXAMPLEFILES := examples/mobilenetv2ssd_trt_debug.cpp
+# EXAMPLEFILES := examples/mnasneta1fcos_trt_debug.cpp
 # EXAMPLEFILES := examples/mnasneta1fcos_trt_fps.cpp
 # EXAMPLEFILES := examples/uninet_trt_fps.cpp
+# EXAMPLEFILES := examples/espnetv2fusion_trt_debug.cpp
+# EXAMPLEFILES := examples/espnetv2fusion_trt_fps.cpp
 
 OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cu, %.o, $(patsubst %.cpp, %.o, $(SRCFILES) $(EXAMPLEFILES))))
 

@@ -1,29 +1,22 @@
-#include "buffers.h"
-#include "common.h"
-#include "logger.h"
-
-#include "NvCaffeParser.h"
-#include "NvInfer.h"
-#include <cuda_runtime_api.h>
-
-#include <cstdlib>
 #include <fstream>
-#include <iostream>
-#include <sstream>
 #include <vector>
 #include <chrono>
 #include <thread>
 
 #include <json.hpp>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "log_stream.hpp"
 #include "postprocess_fcos.hpp"
+#include "nv/run_model.hpp"
 
 
-template <typename T>
-using SampleUniquePtr = std::unique_ptr<T, samplesCommon::InferDeleter>;
+static auto LOG = spdlog::stdout_color_mt("MAIN");
+
 
 
 void plotShapes(cv::Mat &im, std::vector<std::vector<KeyPoint>> &result, std::vector<int> num_vertex_byclass)
@@ -53,7 +46,7 @@ int main(int ac, char *av[])
 {
     if (ac != 2)
     {
-        gLogError << av[0] << " [config_file.json]" << std::endl;
+        SLOG_ERROR << av[0] << " [config_file.json]" << std::endl;
         return 1;
     }
 
@@ -83,24 +76,9 @@ int main(int ac, char *av[])
 
     PostprocessFCOS postprocesser(config["model"]);
 
+    gallopwave::NVModel nvmodel(TRT_ENGINE_PATH);
 
-
-    std::ifstream engineFile(TRT_ENGINE_PATH, std::ios::binary);
-    std::vector<char> engineFileStream(std::istreambuf_iterator<char>(engineFile), {});
-
-    nvinfer1::IRuntime* runtime = createInferRuntime(gLogger);
-    std::shared_ptr<nvinfer1::ICudaEngine> engine =
-        std::shared_ptr<nvinfer1::ICudaEngine>(runtime->deserializeCudaEngine(engineFileStream.data(), engineFileStream.size(), nullptr), samplesCommon::InferDeleter());
-    runtime->destroy();
-
-    std::cout << engine->getBindingDimensions(0).d[0] << std::endl;
-    std::cout << engine->getBindingDimensions(0).d[1] << std::endl;
-    std::cout << engine->getBindingDimensions(0).d[2] << std::endl;
-    
-
-    samplesCommon::BufferManager buffers(engine, 1);
-    auto context = SampleUniquePtr<nvinfer1::IExecutionContext>(engine->createExecutionContext());
-    float* intensorPtrR = static_cast<float*>(buffers.getHostBuffer("data"));
+    float* intensorPtrR = static_cast<float*>(nvmodel.getHostBuffer("data"));
     float* intensorPtrG = intensorPtrR + NET_PLANESIZE;
     float* intensorPtrB = intensorPtrG + NET_PLANESIZE;
 
@@ -120,30 +98,25 @@ int main(int ac, char *av[])
 
         std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
 
+        nvmodel.run();
 
-        buffers.copyInputToDevice(); // Memcpy from host input buffers to device input buffers
-        context->execute(1, buffers.getDeviceBindings().data());
-        buffers.copyOutputToHost(); // Memcpy from device output buffers to host output buffers
+        const float* scoresTensor = static_cast<const float*>(nvmodel.getHostBuffer("scoremap_perm"));
+        const float* centernessTensor = static_cast<const float*>(nvmodel.getHostBuffer("centernessmap_perm"));
+        const float* vertexTensor = static_cast<const float*>(nvmodel.getHostBuffer("regressionmap_perm"));
+        const float* occlusionsTensor = static_cast<const float*>(nvmodel.getHostBuffer("occlusionmap_perm"));
 
-        const float* scoresTensor = static_cast<const float*>(buffers.getHostBuffer("scoremap_perm"));
-        const float* centernessTensor = static_cast<const float*>(buffers.getHostBuffer("centernessmap_perm"));
-        const float* vertexTensor = static_cast<const float*>(buffers.getHostBuffer("regressionmap_perm"));
-        const float* occlusionsTensor = static_cast<const float*>(buffers.getHostBuffer("occlusionmap_perm"));
         std::vector<const float *> featuremaps {scoresTensor, centernessTensor, vertexTensor, occlusionsTensor};
         auto result = postprocesser.run(featuremaps);
 
 
         std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
         timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
-
-        plotShapes(imnet, result, NUM_VERTEX_BYCLASS);
-        cv::imwrite(cv::format("result%d.jpg", (t % 10) + 1), imnet);
     }
 
-    // gLogInfo << "Mnasneta1FCOS FPS: " << 1.0 / (timesum / EVALUATE_TIMES / 1000.0) << std::endl;
+    SLOG_INFO << "Mnasneta1FCOS FPS: " << 1.0 / (timesum / EVALUATE_TIMES / 1000.0) << std::endl;
     // gLogInfo << "Time consumed: " << std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count() / 10.0 << std::endl;
 
-    nvcaffeparser1::shutdownProtobufLibrary();
+
 
     return 0;
 }
