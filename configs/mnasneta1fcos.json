@@ -1,8 +1,8 @@
 {
     "evaluate":{
-        "times": 10,
+        "times": 1000,
         "image_path": "data/VIRB0695_07758.jpg",
-        "images_for_fps": "pics/%d_net_big.jpg",
+        "images_for_fps": "pics/%d_640x384.jpg",
         "folder_path": "/data/local/tmp/recordvepp/"
     },
     "model":{
