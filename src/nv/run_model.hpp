@@ -6,6 +6,8 @@
 #include <NvInferRuntimeCommon.h>
 #include <NvInferPlugin.h>
 #include <NvCaffeParser.h>
+#include <NvOnnxConfig.h>
+#include <NvOnnxParser.h>
 #include <cuda_runtime_api.h>
 
 #include "buffers.hpp"
@@ -25,6 +27,7 @@ constexpr long long int operator"" _KiB(long long unsigned int val)
 
 namespace gallopwave
 {
+
 
 struct NVObjDeleter
 {
@@ -52,6 +55,8 @@ public:
 class NVModel
 {
 public:
+    NVModel(std::string onnxPath, bool isFP16);
+
     NVModel(std::string prototxtPath, 
             std::string caffemodelPath,
             std::vector<std::string>& outTensorNames,
@@ -80,8 +85,6 @@ public:
 private:
     NVLogger logger;
     NVUniquePtr<nvinfer1::ICudaEngine> engine;
-    // std::shared_ptr<nvinfer1::ICudaEngine> engine;
-
     NVUniquePtr<nvinfer1::IExecutionContext> context;
     std::vector<std::unique_ptr<ManagedBuffer>> managedBuffers;
     std::vector<void*> deviceBindings;

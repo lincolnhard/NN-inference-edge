@@ -52,6 +52,34 @@ gallopwave::NVModel::~NVModel(void)
     nvcaffeparser1::shutdownProtobufLibrary();
 }
 
+gallopwave::NVModel::NVModel(std::string onnxPath, bool isFP16)
+{
+    auto builder = NVUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(logger));
+    auto network = NVUniquePtr<nvinfer1::INetworkDefinition>(builder->createNetwork());
+    auto config = NVUniquePtr<nvinfer1::IBuilderConfig>(builder->createBuilderConfig());
+    auto parser = NVUniquePtr<nvonnxparser::IParser>(nvonnxparser::createParser(*network, logger));
+
+    auto parsed = parser->parseFromFile(onnxPath.c_str(), static_cast<int>(nvinfer1::ILogger::Severity::kVERBOSE));
+    if (!parsed)
+    {
+        SLOG_ERROR << "Failed to parse assigned ONNX file" << std::endl;
+        abort();
+    }
+
+    builder->setMaxBatchSize(1); // TODO: tune here
+    config->setMaxWorkspaceSize(100_MiB);
+
+    if (isFP16)
+    {
+        config->setFlag(nvinfer1::BuilderFlag::kFP16);
+    }
+
+    engine = NVUniquePtr<nvinfer1::ICudaEngine>(builder->buildEngineWithConfig(*network, *config));
+
+    context = NVUniquePtr<nvinfer1::IExecutionContext>(engine->createExecutionContext());
+    initBuffers();
+}
+
 gallopwave::NVModel::NVModel(std::string prototxtPath,
                             std::string caffemodelPath,
                             std::vector<std::string>& outTensorNames,
@@ -80,8 +108,6 @@ gallopwave::NVModel::NVModel(std::string prototxtPath,
     }
 
     engine = NVUniquePtr<nvinfer1::ICudaEngine>(builder->buildEngineWithConfig(*network, *config));
-    // engine = std::shared_ptr<nvinfer1::ICudaEngine>(builder->buildEngineWithConfig(*network, *config),
-    //                                                 NVObjDeleter());
 
     context = NVUniquePtr<nvinfer1::IExecutionContext>(engine->createExecutionContext());
     initBuffers();
@@ -90,6 +116,7 @@ gallopwave::NVModel::NVModel(std::string prototxtPath,
 
 gallopwave::NVModel::NVModel(std::string enginePath)
 {
+    initLibNvInferPlugins(&logger, "");
     std::ifstream engineFile(enginePath, std::ios::binary);
     std::vector<char> engineFileStream(std::istreambuf_iterator<char>(engineFile), {});
 
@@ -97,10 +124,6 @@ gallopwave::NVModel::NVModel(std::string enginePath)
     engine = NVUniquePtr<nvinfer1::ICudaEngine>(runtime->deserializeCudaEngine(engineFileStream.data(),
                                                                                 engineFileStream.size(),
                                                                                 nullptr));
-    // engine = std::shared_ptr<nvinfer1::ICudaEngine>(runtime->deserializeCudaEngine(engineFileStream.data(),
-    //                                                                             engineFileStream.size(),nullptr),
-    //                                                 NVObjDeleter());
-
 
     context = NVUniquePtr<nvinfer1::IExecutionContext>(engine->createExecutionContext());
 
