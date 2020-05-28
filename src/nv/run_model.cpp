@@ -50,6 +50,7 @@ void gallopwave::NVLogger::log(Severity severity, char const *msg)
 gallopwave::NVModel::~NVModel(void)
 {
     nvcaffeparser1::shutdownProtobufLibrary();
+    cudaStreamDestroy(stream);
 }
 
 gallopwave::NVModel::NVModel(std::string onnxPath, bool isFP16)
@@ -161,6 +162,8 @@ void gallopwave::NVModel::initBuffers(void)
         deviceBindings.emplace_back(managedBuf->deviceBuffer.data());
         managedBuffers.emplace_back(std::move(managedBuf));
     }
+
+    CHECK(cudaStreamCreate(&stream));
 }
 
 
@@ -189,7 +192,7 @@ void* gallopwave::NVModel::getHostBuffer(const std::string& tensorName) const
 }
 
 
-void gallopwave::NVModel::memcpyBuffers(const bool copyInput, const bool deviceToHost, const bool async, const cudaStream_t& stream)
+void gallopwave::NVModel::memcpyBuffers(const bool copyInput, const bool deviceToHost, const bool async)
 {
     for (int i = 0; i < engine->getNbBindings(); ++i)
     {
@@ -223,15 +226,15 @@ void gallopwave::NVModel::copyOutputToHost()
 }
 
 
-void gallopwave::NVModel::copyInputToDeviceAsync(const cudaStream_t& stream)
+void gallopwave::NVModel::copyInputToDeviceAsync()
 {
-    memcpyBuffers(true, false, true, stream);
+    memcpyBuffers(true, false, true);
 }
 
 
-void gallopwave::NVModel::copyOutputToHostAsync(const cudaStream_t& stream)
+void gallopwave::NVModel::copyOutputToHostAsync()
 {
-    memcpyBuffers(false, true, true, stream);
+    memcpyBuffers(false, true, true);
 }
 
 
@@ -240,4 +243,12 @@ void gallopwave::NVModel::run(void)
     copyInputToDevice(); // Memcpy from host input buffers to device input buffers
     context->execute(1, deviceBindings.data()); // Synchronously execute inference on a batch (batch = 1 here)
     copyOutputToHost(); // Memcpy from device output buffers to host output buffers
+}
+
+void gallopwave::NVModel::runAsync(void)
+{
+    copyInputToDeviceAsync();
+    context->enqueue(1, deviceBindings.data(), stream, nullptr);
+    copyOutputToHostAsync();
+    cudaStreamSynchronize(stream); // Wait for the work in the stream to complete
 }

@@ -75,7 +75,8 @@ int main(int ac, char *av[])
         std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
 
 
-        nvmodel.run();
+        // nvmodel.run();
+        nvmodel.runAsync();
 
 
         const float* scoresTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[0]));
