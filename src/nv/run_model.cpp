@@ -54,6 +54,7 @@ gallopwave::NVModel::~NVModel(void)
 
 gallopwave::NVModel::NVModel(std::string onnxPath, bool isFP16)
 {
+    initLibNvInferPlugins(&logger, "");
     auto builder = NVUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(logger));
     auto network = NVUniquePtr<nvinfer1::INetworkDefinition>(builder->createNetwork());
     auto config = NVUniquePtr<nvinfer1::IBuilderConfig>(builder->createBuilderConfig());
@@ -147,8 +148,10 @@ void gallopwave::NVModel::initBuffers(void)
         auto dims = engine->getBindingDimensions(i);
         int vecDim = engine->getBindingVectorizedDim(i);
         assert(vecDim == -1); // TODO: need check
-        size_t vol = std::accumulate(dims.d, dims.d + dims.nbDims, 1, std::multiplies<int64_t>());
 
+        SLOG_INFO << engine->getBindingName(i) << ": " << dims.d[0] << ", " << dims.d[1] << ", " << dims.d[2] << ", " << dims.d[3] << std::endl;
+
+        size_t vol = std::accumulate(dims.d, dims.d + dims.nbDims, 1, std::multiplies<int64_t>());
         nvinfer1::DataType type = engine->getBindingDataType(i);
 
         std::unique_ptr<ManagedBuffer> managedBuf{new ManagedBuffer()};

@@ -2,7 +2,7 @@
 CXXCL := g++
 NVCXX := nvcc
 
-CXXFLAGS += -O0 -g -std=c++14 -Wno-deprecated -Wno-deprecated-declarations
+CXXFLAGS += -O3 -std=c++14
 
 CUDA_ARCH := -gencode arch=compute_53,code=sm_53 -gencode arch=compute_62,code=sm_62 -gencode arch=compute_72,code=sm_72
 
@@ -27,16 +27,20 @@ OBJROOT := obj
 
 SRCFILES := $(wildcard src/*.cpp)
 SRCFILES += $(wildcard src/nv/*.cpp)
-# SRCFILES += $(wildcard src/*.cu)
+SRCFILES += $(wildcard src/nie/*.cpp)
+SRCFILES += $(wildcard src/nie/*.cu)
 
 
+# EXAMPLEFILES := examples/rgpnet_trt_fps.cpp
+# EXAMPLEFILES := examples/rgpnet_trt_debug.cpp
 # EXAMPLEFILES := examples/mobilenetv2ssd_trt_fps.cpp
 # EXAMPLEFILES := examples/mobilenetv2ssd_trt_debug.cpp
 # EXAMPLEFILES := examples/mnasneta1fcos_trt_debug.cpp
 # EXAMPLEFILES := examples/mnasneta1fcos_trt_fps.cpp
+# EXAMPLEFILES := examples/espnetv2fusion_trt_debug.cpp
+EXAMPLEFILES := examples/espnetv2fusion_trt_fps.cpp
 # EXAMPLEFILES := examples/uninet_trt_fps.cpp
-EXAMPLEFILES := examples/espnetv2fusion_trt_debug.cpp
-# EXAMPLEFILES := examples/espnetv2fusion_trt_fps.cpp
+# EXAMPLEFILES := examples/separate_thread_two_model.cpp
 
 OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cu, %.o, $(patsubst %.cpp, %.o, $(SRCFILES) $(EXAMPLEFILES))))
 
