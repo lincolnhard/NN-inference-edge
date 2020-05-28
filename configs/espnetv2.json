@@ -35,11 +35,12 @@
         "fp16_mode": false
     },
     "onnx":{
-        "onnxpath": "/home/gw/Documents/NN-inference-edge/data/espnetv2fusion.onnx",
-        "output_layer": ["cls_score", "bbox_pred", "centerness", "occlusion", "bu_out"],
-        "fp16_mode": false
+        "onnxpath": "/home/gw/Documents/NN-inference-edge/data/espnetv2fusion_fast.onnx",
+        "input_layer": ["input"],
+        "output_layer": ["cls_score", "bbox_pred", "centerness", "seg"],
+        "fp16_mode": true
     },
     "trt":{
-        "engine": "/home/gw/Documents/NN-inference-edge/data/espnetv2fusion.engine"
+        "engine": "/home/gw/Documents/NN-inference-edge/data/espnetv2fusion_fast_fp32.engine"
     }
 }
