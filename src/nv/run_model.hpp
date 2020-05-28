@@ -70,6 +70,8 @@ public:
 
     void run(void);
 
+    void runAsync(void);
+
     void* getDeviceBuffer(const std::string& tensorName) const;
 
     void* getHostBuffer(const std::string& tensorName) const;
@@ -78,9 +80,9 @@ public:
 
     void copyOutputToHost();
 
-    void copyInputToDeviceAsync(const cudaStream_t& stream = 0);
+    void copyInputToDeviceAsync();
 
-    void copyOutputToHostAsync(const cudaStream_t& stream = 0);
+    void copyOutputToHostAsync();
 
 private:
     NVLogger logger;
@@ -88,12 +90,13 @@ private:
     NVUniquePtr<nvinfer1::IExecutionContext> context;
     std::vector<std::unique_ptr<ManagedBuffer>> managedBuffers;
     std::vector<void*> deviceBindings;
+    cudaStream_t stream;
 
     void initBuffers(void);
 
     void* getBuffer(const bool isHost, const std::string& tensorName) const;
 
-    void memcpyBuffers(const bool copyInput, const bool deviceToHost, const bool async, const cudaStream_t& stream = 0);
+    void memcpyBuffers(const bool copyInput, const bool deviceToHost, const bool async);
 };
 
 
