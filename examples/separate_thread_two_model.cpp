@@ -63,7 +63,7 @@ void segFunc(nlohmann::json config)
         std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
 
 
-        nvmodel.run();
+        nvmodel.runAsync();
 
 
         std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
@@ -122,7 +122,7 @@ void detFunc(nlohmann::json config)
         std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
 
 
-        nvmodel.run();
+        nvmodel.runAsync();
 
 
         std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
