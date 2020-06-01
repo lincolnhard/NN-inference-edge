@@ -16,7 +16,7 @@
         "input_layer": ["input"],
         "output_layer": ["seg"],
         "images_for_fps": "pics/%d_1024x1024.jpg",
-        "times": 100
+        "times": 1000
     },
     "mobilessd":{
         "engine": "/home/gw/Documents/NN-inference-edge/data/mobilenet_ssd_voc_fp16.engine",
@@ -35,6 +35,6 @@
         "input_layer": ["0"],
         "output_layer": ["660"],
         "images_for_fps": "pics/%d_512x512.jpg",
-        "times": 100
+        "times": 1000
     }
 }

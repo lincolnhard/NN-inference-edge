@@ -128,6 +128,7 @@ gallopwave::NVModel::NVModel(std::string enginePath)
                                                                                 nullptr));
 
     context = NVUniquePtr<nvinfer1::IExecutionContext>(engine->createExecutionContext());
+    engineFile.close();
 
     initBuffers();
 }
