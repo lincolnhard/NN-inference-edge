@@ -11,36 +11,11 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "log_stream.hpp"
-#include "postprocess_fcos.hpp"
 #include "nv/run_model.hpp"
-
 
 static auto LOG = spdlog::stdout_color_mt("MAIN");
 
 
-
-void plotShapes(cv::Mat &im, std::vector<std::vector<KeyPoint>> &result, std::vector<int> num_vertex_byclass)
-{
-    const int numClass = result.size();
-    for (int clsIdx = 0; clsIdx < numClass; ++clsIdx)
-    {
-        std::vector<KeyPoint> &shapes = result[clsIdx];
-        const int numShape = shapes.size();
-        const int numTotalVertex = num_vertex_byclass[clsIdx];
-        for (int sIdx = 0; sIdx < numShape; ++sIdx)
-        {
-            cv::Point vertices[1][6];
-            for (int i = 0; i < numTotalVertex; ++i)
-            {
-                vertices[0][i].x = shapes[sIdx].vertex[i].x * im.cols;
-                vertices[0][i].y = shapes[sIdx].vertex[i].y * im.rows;
-            }
-            const cv::Point* vtsptr[1] = {vertices[0]};
-            int npt[] = {numTotalVertex};
-            cv::polylines(im, vtsptr, npt, 1, 1, cv::Scalar(0, 0, 255), 1, 16);
-        }
-    }
-}
 
 int main(int ac, char *av[])
 {
@@ -65,23 +40,22 @@ int main(int ac, char *av[])
     const float STDR = config["model"]["std"]["R"].get<float>();
     const float STDG = config["model"]["std"]["G"].get<float>();
     const float STDB = config["model"]["std"]["B"].get<float>();
-    const std::string CAFFETXT = config["caffe"]["prototxt"].get<std::string>();
-    const std::string CAFFEBIN = config["caffe"]["caffemodel"].get<std::string>();
-    std::vector<std::string> OUT_TENSOR_NAMES = config["caffe"]["output_layer"].get<std::vector<std::string> >();
-    const bool FP16MODE = config["caffe"]["fp16_mode"].get<bool>();
-    std::vector<int> NUM_VERTEX_BYCLASS = config["model"]["class_num_vertex"].get<std::vector<int> >();
+
+    const std::string ONNXPATH = config["onnx"]["onnxpath"].get<std::string>();
+    std::vector<std::string> OUT_TENSOR_NAMES = config["onnx"]["output_layer"].get<std::vector<std::string> >();
+    const bool FP16MODE = config["onnx"]["fp16_mode"].get<bool>();
+
     const std::string IMPATH = config["evaluate"]["images_for_fps"].get<std::string>();
     const int EVALUATE_TIMES = config["evaluate"]["times"].get<int>();
     const std::string TRT_ENGINE_PATH = config["trt"]["engine"].get<std::string>();
 
-    PostprocessFCOS postprocesser(config["model"]);
+
 
     gallopwave::NVModel nvmodel(TRT_ENGINE_PATH);
 
-    float* intensorPtrR = static_cast<float*>(nvmodel.getHostBuffer("data"));
+    float* intensorPtrR = static_cast<float*>(nvmodel.getHostBuffer("0"));
     float* intensorPtrG = intensorPtrR + NET_PLANESIZE;
     float* intensorPtrB = intensorPtrG + NET_PLANESIZE;
-
 
     double timesum = 0.0;
     for (int t = 0; t < EVALUATE_TIMES; ++t)
@@ -95,28 +69,20 @@ int main(int ac, char *av[])
         }
 
 
-
         std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
+
 
         nvmodel.run();
 
-        const float* scoresTensor = static_cast<const float*>(nvmodel.getHostBuffer("scoremap_perm"));
-        const float* centernessTensor = static_cast<const float*>(nvmodel.getHostBuffer("centernessmap_perm"));
-        const float* vertexTensor = static_cast<const float*>(nvmodel.getHostBuffer("regressionmap_perm"));
-        const float* occlusionsTensor = static_cast<const float*>(nvmodel.getHostBuffer("occlusionmap_perm"));
-
-        std::vector<const float *> featuremaps {scoresTensor, centernessTensor, vertexTensor, occlusionsTensor};
-        auto result = postprocesser.run(featuremaps);
+        const float* scoresTensor = static_cast<const float*>(nvmodel.getHostBuffer("660"));
 
 
         std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
         timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
     }
 
-    SLOG_INFO << "Mnasneta1FCOS FPS: " << 1.0 / (timesum / EVALUATE_TIMES / 1000.0) << std::endl;
-    // gLogInfo << "Time consumed: " << std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count() / 10.0 << std::endl;
 
-
+    SLOG_INFO << "MobileNetV2SSD FPS: " << 1.0 / (timesum / EVALUATE_TIMES / 1000.0) << std::endl;
 
     return 0;
 }

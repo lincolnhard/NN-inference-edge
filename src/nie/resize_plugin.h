@@ -2,9 +2,8 @@
 
 #include <string>
 #include <vector>
-#include "NvInferPlugin.h"
-#include "NvUffParser.h"
-
+#include <NvInferPlugin.h>
+#include <NvUffParser.h>
 
 
 /// Resize tensors with [batch, channels, height, width] size
@@ -183,5 +182,3 @@ class ResizePluginCreator : public nvinfer1::IPluginCreator {
     // Namespace of the creator/plugin
     std::string namespace_;
 };
-
-

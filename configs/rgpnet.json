@@ -1,0 +1,31 @@
+{
+    "evaluate":{
+        "times": 1000,
+        "image_path": "data/VIRB0695_07758.jpg",
+        "images_for_fps": "pics/%d_1024x1024.jpg",
+        "folder_path": "/data/local/tmp/recordvepp/"
+    },
+    "model":{
+        "mean":{
+            "R": 0.3856,
+            "G": 0.4016,
+            "B": 0.4108
+        },
+        "std":{
+            "R": 0.2572,
+            "G": 0.2660,
+            "B": 0.2810
+        },
+        "net_width": 1024,
+        "net_height": 1024
+    },
+    "onnx":{
+        "onnxpath": "/home/gw/Documents/NN-inference-edge/data/rgpnet_mapillary_65.onnx",
+        "input_layer": ["input"],
+        "output_layer": ["seg"],
+        "fp16_mode": true
+    },
+    "trt":{
+        "engine": "/home/gw/Documents/NN-inference-edge/data/rgpnet_mapillary_7_fp16.engine"
+    }
+}

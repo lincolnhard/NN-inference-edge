@@ -1,7 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include "resize_bilinear_kernel.h"
-#include "trt_common.h"
+#include "common.h"
 
 
 using namespace nvinfer1;

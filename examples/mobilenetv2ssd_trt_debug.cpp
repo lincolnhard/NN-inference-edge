@@ -40,22 +40,21 @@ int main(int ac, char *av[])
     const float STDR = config["model"]["std"]["R"].get<float>();
     const float STDG = config["model"]["std"]["G"].get<float>();
     const float STDB = config["model"]["std"]["B"].get<float>();
+
     const std::string ONNXPATH = config["onnx"]["onnxpath"].get<std::string>();
-    std::vector<std::string> IN_TENSOR_NAMES = config["onnx"]["input_layer"].get<std::vector<std::string> >();
     std::vector<std::string> OUT_TENSOR_NAMES = config["onnx"]["output_layer"].get<std::vector<std::string> >();
     const bool FP16MODE = config["onnx"]["fp16_mode"].get<bool>();
-    const std::string TRT_ENGINE_PATH = config["trt"]["engine"].get<std::string>();
+
     const std::string IMPATH = config["evaluate"]["image_path"].get<std::string>();
     const int EVALUATE_TIMES = config["evaluate"]["times"].get<int>();
+    const std::string TRT_ENGINE_PATH = config["trt"]["engine"].get<std::string>();
 
 
+    // gallopwave::NVModel nvmodel(ONNXPATH, FP16MODE);
+    // nvmodel.outputEngine(TRT_ENGINE_PATH);
+    gallopwave::NVModel nvmodel(TRT_ENGINE_PATH);
 
-    gallopwave::NVModel nvmodel(ONNXPATH, FP16MODE);
-    nvmodel.outputEngine(TRT_ENGINE_PATH);
-
-    // gallopwave::NVModel nvmodel(TRT_ENGINE_PATH);
-
-    float* intensorPtrR = static_cast<float*>(nvmodel.getHostBuffer(IN_TENSOR_NAMES[0]));
+    float* intensorPtrR = static_cast<float*>(nvmodel.getHostBuffer("0"));
     float* intensorPtrG = intensorPtrR + NET_PLANESIZE;
     float* intensorPtrB = intensorPtrG + NET_PLANESIZE;
 
@@ -74,16 +73,10 @@ int main(int ac, char *av[])
     nvmodel.run();
 
 
-    const float* scoresTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[0]));
-    const float* vertexTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[1]));
-    const float* centernessTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[2]));
-    const float* segTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[3]));
+
+    const float* scoresTensor = static_cast<const float*>(nvmodel.getHostBuffer("660"));
 
     SLOG_INFO << scoresTensor[0] << std::endl;
-    SLOG_INFO << centernessTensor[0] << std::endl;
-    SLOG_INFO << vertexTensor[0] << std::endl;
-    SLOG_INFO << segTensor[0] << std::endl;
-
 
 
     return 0;

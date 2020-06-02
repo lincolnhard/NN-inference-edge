@@ -1,29 +1,21 @@
-#include "buffers.h"
-#include "common.h"
-#include "logger.h"
-
-#include "NvCaffeParser.h"
-#include "NvInfer.h"
-#include <cuda_runtime_api.h>
-
-#include <cstdlib>
 #include <fstream>
-#include <iostream>
-#include <sstream>
 #include <vector>
 #include <chrono>
 #include <thread>
 
 #include <json.hpp>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "log_stream.hpp"
 #include "postprocess_fcos.hpp"
+#include "nv/run_model.hpp"
 
+static auto LOG = spdlog::stdout_color_mt("MAIN");
 
-template <typename T>
-using SampleUniquePtr = std::unique_ptr<T, samplesCommon::InferDeleter>;
 
 
 void plotShapes(cv::Mat &im, std::vector<std::vector<KeyPoint>> &result, std::vector<int> num_vertex_byclass)
@@ -53,7 +45,7 @@ int main(int ac, char *av[])
 {
     if (ac != 2)
     {
-        gLogError << av[0] << " [config_file.json]" << std::endl;
+        SLOG_ERROR << av[0] << " [config_file.json]" << std::endl;
         return 1;
     }
 
@@ -79,50 +71,19 @@ int main(int ac, char *av[])
     std::vector<int> NUM_VERTEX_BYCLASS = config["model"]["class_num_vertex"].get<std::vector<int> >();
     const std::string IMPATH = config["evaluate"]["image_path"].get<std::string>();
     const int EVALUATE_TIMES = config["evaluate"]["times"].get<int>();
+    const std::string TRT_ENGINE_PATH = config["trt"]["engine"].get<std::string>();
 
     PostprocessFCOS postprocesser(config["model"]);
 
 
+    // gallopwave::NVModel nvmodel(CAFFETXT, CAFFEBIN, OUT_TENSOR_NAMES, FP16MODE);
+    // nvmodel.outputEngine("data/mnasneta1fcos.engine");
 
-    initLibNvInferPlugins(&gLogger.getTRTLogger(), "");
-    auto trtbuilder = SampleUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(gLogger.getTRTLogger()));
-    auto trtnetwork = SampleUniquePtr<nvinfer1::INetworkDefinition>(trtbuilder->createNetwork());
-    auto trtconfig = SampleUniquePtr<nvinfer1::IBuilderConfig>(trtbuilder->createBuilderConfig());
-    auto trtparser = SampleUniquePtr<nvcaffeparser1::ICaffeParser>(nvcaffeparser1::createCaffeParser());
+    gallopwave::NVModel nvmodel(TRT_ENGINE_PATH);
 
-    const nvcaffeparser1::IBlobNameToTensor* blobNameToTensor = trtparser->parse(CAFFETXT.c_str(), CAFFEBIN.c_str(), *trtnetwork, nvinfer1::DataType::kFLOAT);
-
-    for (auto& s : OUT_TENSOR_NAMES)
-    {
-        trtnetwork->markOutput(*blobNameToTensor->find(s.c_str()));
-    }
-
-    trtbuilder->setMaxBatchSize(1);
-    trtconfig->setMaxWorkspaceSize(36_MiB);
-
-    if (FP16MODE)
-    {
-        trtconfig->setFlag(nvinfer1::BuilderFlag::kFP16);
-    }
-
-    std::shared_ptr<nvinfer1::ICudaEngine> engine = 
-        std::shared_ptr<nvinfer1::ICudaEngine>(trtbuilder->buildEngineWithConfig(*trtnetwork, *trtconfig), samplesCommon::InferDeleter());
-
-    // transforming the engine into a format to store and use at a later time for inference
-    nvinfer1::IHostMemory *serializedEngine = engine->serialize();
-    std::ofstream engineFile("data/mnasneta1focs.engine", std::ios::binary);
-    engineFile.write(reinterpret_cast<const char*>(serializedEngine->data()), serializedEngine->size());
-    serializedEngine->destroy();
-    engineFile.close();
-
-
-    samplesCommon::BufferManager buffers(engine, 1);
-    auto context = SampleUniquePtr<nvinfer1::IExecutionContext>(engine->createExecutionContext());
-    float* intensorPtrR = static_cast<float*>(buffers.getHostBuffer("data"));
+    float* intensorPtrR = static_cast<float*>(nvmodel.getHostBuffer("data"));
     float* intensorPtrG = intensorPtrR + NET_PLANESIZE;
     float* intensorPtrB = intensorPtrG + NET_PLANESIZE;
-
-
 
 
     cv::Mat im = cv::imread(IMPATH);
@@ -135,22 +96,23 @@ int main(int ac, char *av[])
         intensorPtrB[i] = ((imnet.data[3 * i + 0] / 255.0f) - MEANB) / STDB;
     }
 
-    buffers.copyInputToDevice(); // Memcpy from host input buffers to device input buffers
-    context->execute(1, buffers.getDeviceBindings().data());
-    buffers.copyOutputToHost(); // Memcpy from device output buffers to host output buffers
 
-    const float* scoresTensor = static_cast<const float*>(buffers.getHostBuffer("scoremap_perm"));
-    const float* centernessTensor = static_cast<const float*>(buffers.getHostBuffer("centernessmap_perm"));
-    const float* vertexTensor = static_cast<const float*>(buffers.getHostBuffer("regressionmap_perm"));
-    const float* occlusionsTensor = static_cast<const float*>(buffers.getHostBuffer("occlusionmap_perm"));
+
+    nvmodel.run();
+
+
+    const float* scoresTensor = static_cast<const float*>(nvmodel.getHostBuffer("scoremap_perm"));
+    const float* centernessTensor = static_cast<const float*>(nvmodel.getHostBuffer("centernessmap_perm"));
+    const float* vertexTensor = static_cast<const float*>(nvmodel.getHostBuffer("regressionmap_perm"));
+    const float* occlusionsTensor = static_cast<const float*>(nvmodel.getHostBuffer("occlusionmap_perm"));
+
+
     std::vector<const float *> featuremaps {scoresTensor, centernessTensor, vertexTensor, occlusionsTensor};
     auto result = postprocesser.run(featuremaps);
 
     plotShapes(imnet, result, NUM_VERTEX_BYCLASS);
     cv::imwrite("result.jpg", imnet);
 
-
-    nvcaffeparser1::shutdownProtobufLibrary();
 
     return 0;
 }

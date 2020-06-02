@@ -13,6 +13,7 @@
 #include "log_stream.hpp"
 #include "nv/run_model.hpp"
 
+
 static auto LOG = spdlog::stdout_color_mt("MAIN");
 
 
@@ -45,44 +46,49 @@ int main(int ac, char *av[])
     std::vector<std::string> OUT_TENSOR_NAMES = config["onnx"]["output_layer"].get<std::vector<std::string> >();
     const bool FP16MODE = config["onnx"]["fp16_mode"].get<bool>();
     const std::string TRT_ENGINE_PATH = config["trt"]["engine"].get<std::string>();
-    const std::string IMPATH = config["evaluate"]["image_path"].get<std::string>();
+    const std::string IMPATH = config["evaluate"]["images_for_fps"].get<std::string>();
     const int EVALUATE_TIMES = config["evaluate"]["times"].get<int>();
 
 
 
-    gallopwave::NVModel nvmodel(ONNXPATH, FP16MODE);
-    nvmodel.outputEngine(TRT_ENGINE_PATH);
+    // gallopwave::NVModel nvmodel(ONNXPATH, FP16MODE);
+    // nvmodel.outputEngine(TRT_ENGINE_PATH);
 
-    // gallopwave::NVModel nvmodel(TRT_ENGINE_PATH);
+    gallopwave::NVModel nvmodel(TRT_ENGINE_PATH);
 
     float* intensorPtrR = static_cast<float*>(nvmodel.getHostBuffer(IN_TENSOR_NAMES[0]));
     float* intensorPtrG = intensorPtrR + NET_PLANESIZE;
     float* intensorPtrB = intensorPtrG + NET_PLANESIZE;
 
-    cv::Mat im = cv::imread(IMPATH);
-    cv::Mat imnet;
-    cv::resize(im, imnet, cv::Size(NETW, NETH));
-    for (int i = 0; i < NET_PLANESIZE; ++i)
+
+    double timesum = 0.0;
+    for (int t = 0; t < EVALUATE_TIMES; ++t)
     {
-        intensorPtrR[i] = ((imnet.data[3 * i + 2] / 255.0f) - MEANR) / STDR;
-        intensorPtrG[i] = ((imnet.data[3 * i + 1] / 255.0f) - MEANG) / STDG;
-        intensorPtrB[i] = ((imnet.data[3 * i + 0] / 255.0f) - MEANB) / STDB;
+        cv::Mat imnet = cv::imread(cv::format(IMPATH.c_str(), (t % 10) + 1));
+        for (int i = 0; i < NET_PLANESIZE; ++i)
+        {
+            intensorPtrR[i] = ((imnet.data[3 * i + 2] / 255.0f) - MEANR) / STDR;
+            intensorPtrG[i] = ((imnet.data[3 * i + 1] / 255.0f) - MEANG) / STDG;
+            intensorPtrB[i] = ((imnet.data[3 * i + 0] / 255.0f) - MEANB) / STDB;
+        }
+
+
+        std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
+
+
+        nvmodel.run();
+
+
+        const float* segTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[0]));
+
+
+        std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
+        timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
     }
 
 
+    SLOG_INFO << "RGPNet FPS: " << 1.0 / (timesum / EVALUATE_TIMES / 1000.0) << std::endl;
 
-    nvmodel.run();
-
-
-    const float* scoresTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[0]));
-    const float* vertexTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[1]));
-    const float* centernessTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[2]));
-    const float* segTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[3]));
-
-    SLOG_INFO << scoresTensor[0] << std::endl;
-    SLOG_INFO << centernessTensor[0] << std::endl;
-    SLOG_INFO << vertexTensor[0] << std::endl;
-    SLOG_INFO << segTensor[0] << std::endl;
 
 
 

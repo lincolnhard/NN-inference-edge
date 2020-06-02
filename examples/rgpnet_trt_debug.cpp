@@ -13,6 +13,7 @@
 #include "log_stream.hpp"
 #include "nv/run_model.hpp"
 
+
 static auto LOG = spdlog::stdout_color_mt("MAIN");
 
 
@@ -74,14 +75,10 @@ int main(int ac, char *av[])
     nvmodel.run();
 
 
-    const float* scoresTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[0]));
-    const float* vertexTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[1]));
-    const float* centernessTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[2]));
-    const float* segTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[3]));
 
-    SLOG_INFO << scoresTensor[0] << std::endl;
-    SLOG_INFO << centernessTensor[0] << std::endl;
-    SLOG_INFO << vertexTensor[0] << std::endl;
+    const float* segTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[0]));
+
+
     SLOG_INFO << segTensor[0] << std::endl;
 
 

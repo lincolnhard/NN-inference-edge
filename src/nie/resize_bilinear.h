@@ -2,8 +2,8 @@
 
 #include <string>
 #include <vector>
-#include "NvInferPlugin.h"
-#include "NvUffParser.h"
+#include <NvInferPlugin.h>
+#include <NvUffParser.h>
 #include "resize_plugin.h"
 
 

@@ -2,23 +2,34 @@
 
 #include <string>
 #include <vector>
-#include "NvInferPlugin.h"
-#include "NvUffParser.h"
+#include <NvInferPlugin.h>
+#include <NvUffParser.h>
 
 
 
-/// Reshape plugin which can be used for debuggin or replacing the TRT default
-/// reshape plugin.
-class Reshape : public nvinfer1::IPluginV2 {
+class ArgMax : public nvinfer1::IPluginV2 {
    public:
-    Reshape();
-    virtual ~Reshape() override;
-    Reshape(nvinfer1::Dims const input_dims, nvinfer1::Dims const output_dims,
-           nvinfer1::DataType const type);
+    ArgMax();
 
-    Reshape(void const *data, size_t const length);
+    /// Clone constructor
+    /// \param[in] axis Direction of argmax operation on the input tensor.
+    ///     Basically removes this dimension
+    /// \param[in] input_dims Dimensions of input tensor
+    /// \param[in] output_dims Dimenions of output tensor
+    /// \param[in] type Type of engine (/input data)
+    /// \param[in] allow_int8 If true, plugin can use int8 output. This is
+    ///     can be required for int8 calculatetions. Default true
+    ArgMax(int const axis, nvinfer1::Dims const input_dims,
+           nvinfer1::Dims const output_dims, nvinfer1::DataType const type,
+           bool const allow_int8);
 
-    /// \return Plugin name which should be used as 'op="reshape_TRT"' in
+    /// Deserialize constructor
+    /// \param[in] data Byte stream from which the plugin should be created
+    /// \param[in] length Length of byte stream from which the plugin should be
+    /// created
+    ArgMax(void const *data, size_t const length);
+
+    /// \return Plugin name which should be used as 'op="argmax_TRT"' in
     ///     graphsurgeon when calling 'create_plugin_node'
     virtual char const *getPluginType() const override;
 
@@ -102,12 +113,19 @@ class Reshape : public nvinfer1::IPluginV2 {
     /// \return Plugin namespace
     virtual char const *getPluginNamespace() const override;
 
-    /// \param[in] input_dims Input dimensions
-    void SetInputShape(nvinfer1::Dims const input_dims);
+    /// Set axis of argmax. Basically this axis will be removed from the input
+    /// data by using function max
+    /// \param[in] axis Axis to be removed
+    /// \note Valid axis are [-rank(input) - 1, rank(input) - 1)
+    void setAxis(int const axis);
 
-    /// \param[in] output_dims Output dimensions
-    void SetOutputShape(nvinfer1::Dims const output_dims);
- private:
+    /// Set if int8 is allowed
+    void setAllowInt8(bool const allow_int8);
+
+   private:
+    // Axis of argmax, default is 0
+    int axis_;
+
     // Dimensions of the input (without batches)
     nvinfer1::Dims input_dims_;
 
@@ -121,13 +139,17 @@ class Reshape : public nvinfer1::IPluginV2 {
 
     // Namespace of the plugin
     std::string namespace_;
+
+    // If true, int8 output is allowed. Note that this will limit the maximum
+    // number for argmax to 255 (we count both negative and positive)
+    bool allow_int8_;
 };
 
-class ReshapePluginCreator : public nvinfer1::IPluginCreator {
+class ArgMaxPluginCreator : public nvinfer1::IPluginCreator {
    public:
-    ReshapePluginCreator();
+    ArgMaxPluginCreator();
 
-    /// \return Plugin name which should be used as 'op="reshape_TRT"' in
+    /// \return Plugin name which should be used as 'op="argmax_TRT"' in
     ///     graphsurgeon when calling 'create_plugin_node'
     virtual char const *getPluginName() const override;
 
@@ -170,6 +192,7 @@ class ReshapePluginCreator : public nvinfer1::IPluginCreator {
     std::string namespace_;
 };
 
-REGISTER_TENSORRT_PLUGIN(ReshapePluginCreator);
+// Register plugin to plugin registry so that it can be found automatically
+REGISTER_TENSORRT_PLUGIN(ArgMaxPluginCreator);
 
 

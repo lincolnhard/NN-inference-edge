@@ -2,7 +2,7 @@
     "evaluate":{
         "times": 1000,
         "image_path": "data/VIRB0695_07758.jpg",
-        "images_for_fps": "pics/%d_640x384.jpg",
+        "images_for_fps": "pics/%d_640x480.jpg",
         "folder_path": "/data/local/tmp/recordvepp/"
     },
     "model":{
@@ -17,7 +17,7 @@
             "B": 0.2810
         },
         "net_width": 640,
-        "net_height": 384,
+        "net_height": 480,
         "feature_width": 80,
         "feature_height": 48,
         "num_class": 6,
@@ -29,12 +29,18 @@
         "scale": 4.591407775878906
     },
     "caffe":{
-        "prototxt": "data/mnasneta1fcos.prototxt",
-        "caffemodel": "data/mnasneta1fcos.caffemodel",
-        "output_layer": ["scoremap_perm", "centernessmap_perm", "regressionmap_perm", "occlusionmap_perm"],
+        "prototxt": "data/espnetv2_segfcos.prototxt",
+        "caffemodel": "data/espnetv2_segfcos.caffemodel",
+        "output_layer": ["scoremap_perm", "centernessmap_perm", "regressionmap_perm", "occlusionmap_perm", "prelu254"],
+        "fp16_mode": false
+    },
+    "onnx":{
+        "onnxpath": "/home/gw/Documents/NN-inference-edge/data/espnetv2fusion_fast.onnx",
+        "input_layer": ["input"],
+        "output_layer": ["cls_score", "bbox_pred", "centerness", "seg"],
         "fp16_mode": true
     },
     "trt":{
-        "engine": "/home/gw/Documents/NN-inference-edge/data/mnasneta1fcos.engine"
+        "engine": "/home/gw/Documents/NN-inference-edge/data/espnetv2fusion_fast_fp32.engine"
     }
 }

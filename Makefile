@@ -18,7 +18,7 @@ DEFINES := -D NDEBUG
 LDFLAGS := -L/usr/lib/aarch64-linux-gnu
 LDFLAGS += -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio -lopencv_dnn
 LDFLAGS += -lglog -lboost_system
-LDFLAGS += -lnvinfer -lnvparsers -lcuda -lnvinfer_plugin
+LDFLAGS += -lnvinfer -lnvparsers -lcuda -lnvinfer_plugin -lnvonnxparser -lnvonnxparser_runtime
 LDFLAGS += -L/usr/local/cuda-10.0/targets/aarch64-linux/lib
 LDFLAGS += -lcudart
 LDFLAGS += -pthread -lm
@@ -26,22 +26,27 @@ LDFLAGS += -pthread -lm
 OBJROOT := obj
 
 SRCFILES := $(wildcard src/*.cpp)
-SRCFILES += $(wildcard src/*.cu)
+SRCFILES += $(wildcard src/nv/*.cpp)
+SRCFILES += $(wildcard src/nie/*.cpp)
+SRCFILES += $(wildcard src/nie/*.cu)
 
 
-# $(error LHH: '$(SRCFILES)')
-
-# EXAMPLEFILES := examples/mobilenetv2unet_trt_fps.cpp
-# EXAMPLEFILES := examples/combine.cpp
+# EXAMPLEFILES := examples/rgpnet_trt_fps.cpp
+# EXAMPLEFILES := examples/rgpnet_trt_debug.cpp
+# EXAMPLEFILES := examples/mobilenetv2ssd_trt_fps.cpp
+# EXAMPLEFILES := examples/mobilenetv2ssd_trt_debug.cpp
 # EXAMPLEFILES := examples/mnasneta1fcos_trt_debug.cpp
 # EXAMPLEFILES := examples/mnasneta1fcos_trt_fps.cpp
+# EXAMPLEFILES := examples/espnetv2fusion_trt_debug.cpp
+# EXAMPLEFILES := examples/espnetv2fusion_trt_fps.cpp
 # EXAMPLEFILES := examples/uninet_trt_fps.cpp
-# EXAMPLEFILES := examples/maindebug.cpp
-EXAMPLEFILES := examples/uninet_trt_fps.cpp
+EXAMPLEFILES := examples/separate_thread_two_model.cpp
+# EXAMPLEFILES := examples/separate_related_model.cpp
 
 OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cu, %.o, $(patsubst %.cpp, %.o, $(SRCFILES) $(EXAMPLEFILES))))
 
 # $(error LHH: '$(OBJS)')
+
 
 APP_NAME := aurora
 
@@ -52,12 +57,12 @@ all: obj $(OBJS)
 	$(CXXCL) $(SHAREDPATH) $(OBJS) $(LDFLAGS) -o $(APP_NAME)
 
 $(OBJROOT)/%.o: %.cpp
-	$(CXXCL) -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o $@
+	$(CXXCL) -c -pipe $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o $@
 $(OBJROOT)/%.o: %.cu
 	$(NVCXX) -c $(CXXFLAGS) $(CUDA_ARCH) $(DEFINES) $(INCLUDES) $< -o $@
 
 obj:
-	mkdir -vp $(OBJROOT) $(OBJROOT)/src $(OBJROOT)/examples
+	mkdir -vp $(OBJROOT) $(dir $(OBJS))
 
 .PHONY: clean obj
 
