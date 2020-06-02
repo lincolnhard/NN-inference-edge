@@ -22,7 +22,7 @@ if __name__ == '__main__':
     #===================
     ### Mark groundtruth
     #===================
-    baseroot = '/Users/lincolnlee/Documents/NN-inference-using-SNPE/python/'
+    baseroot = '/Users/lincolnlee/Documents/NN-inference-edge/python/'
     image_file = baseroot + 'VIRB0695_07758.jpg'
  
     # img_gt = cv2.imread(image_file) # shape: (height, width, channels)

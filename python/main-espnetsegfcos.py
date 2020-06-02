@@ -1,12 +1,12 @@
 import os
 os.environ['GLOG_minloglevel'] = '2' # suprress Caffe verbose prints
 import torch
-# import caffe
-# from caffe import layers as L
-# from caffe import params as P
+import caffe
+from caffe import layers as L
+from caffe import params as P
 import cv2
 from torchvision import transforms
-# import caffescripts
+import caffescripts
 import pytorchscripts
 from PIL import Image, ImageDraw
 import numpy as np
@@ -108,52 +108,54 @@ if __name__ == '__main__':
     ### Export to ONNX
     #=================
 
-    # torch.onnx.export(pytorch_model,
-    #                     imgt,
-    #                     "espnetv2fusion.onnx",
-    #                     export_params=True,
-    #                     keep_initializers_as_inputs=True,
-    #                     opset_version=10,
-    #                     do_constant_folding=True,
-    #                     input_names = ['input'],
-    #                     output_names = ['cls_score', 'bbox_pred', 'centerness', 'occlusion', 'bu_out']
-    #                 )
+    torch.onnx.export(pytorch_model,
+                        imgt,
+                        "espnetv2fusion.onnx",
+                        export_params=True,
+                        keep_initializers_as_inputs=True,
+                        opset_version=10,
+                        do_constant_folding=True,
+                        input_names = ['input'],
+                        output_names = ['cls_score', 'bbox_pred', 'centerness', 'occlusion', 'bu_out']
+                    )
 
     #===================
     ### Apply ONNX model
     #===================
 
-    # import onnx
-    # onnx_model = onnx.load("espnetv2fusion.onnx")
-    # onnx.checker.check_model(onnx_model)
+    import onnx
+    onnx_model = onnx.load("espnetv2fusion.onnx")
+    onnx.checker.check_model(onnx_model)
 
     #==========================================================
     ### Create prototxt, caffemodel and feed with random weight
     #==========================================================
 
-    fileName = 'espnetv2_segfcos'
-    netW = model_config['dataset']['size'][1]
-    netH = model_config['dataset']['size'][0]
-    netClassesSeg = model_config['model']['num_classes_seg']
-    netClassesFcos = model_config['model']['num_classes_fcos']
-    net = caffe.NetSpec()
-    net['data'] = L.Input(shape=dict(dim=[1, 3, netH, netW]))
+    # fileName = 'espnetv2_segfcos'
+    # netW = model_config['dataset']['size'][1]
+    # netH = model_config['dataset']['size'][0]
+    # netClassesSeg = model_config['model']['num_classes_seg']
+    # netClassesFcos = model_config['model']['num_classes_fcos']
+    # net = caffe.NetSpec()
+    # net['data'] = L.Input(shape=dict(dim=[1, 3, 480, 640]))
 
-    caffe_model = caffescripts.ESPNetV2Fusion()
-    caffe_model.createPrototxt(net)
+    # caffe_model = caffescripts.ESPNetV2Fusion()
+    # caffe_model.createPrototxt(net)
 
-    with open(fileName + '.prototxt', 'w') as f:
-        f.write(str(net.to_proto()))
+    # with open(fileName + '.prototxt', 'w') as f:
+    #     f.write(str(net.to_proto()))
 
-    # fill random weight
-    net = caffe.Net(fileName + '.prototxt', caffe.TEST)
-    for layername in list(net.params):
-            for i in range(len(net.params[layername])):
-                    net.params[layername][i].data[...] = np.array([np.random.randint(-100, 100)/100.0])
-    net.save(fileName + '.caffemodel')
+    # # fill random weight
+    # net = caffe.Net(fileName + '.prototxt', caffe.TEST)
+    # for layername in list(net.params):
+    #         for i in range(len(net.params[layername])):
+    #                 net.params[layername][i].data[...] = np.array([np.random.randint(-100, 100)/100.0])
+    # net.save(fileName + '.caffemodel')
 
-    print(net.blobs['sigmo182'].data.shape, net.blobs['prelu183'].data.shape)
-    # print(net.blobs['prelu254'].data.shape)
+
+    # print(net.blobs['prod183'].data.shape)
+    # print(net.blobs['prod212'].data.shape)
+    # print(net.blobs['prod233'].data.shape)
 
     #=======================================
     ### Feed weighting from pytorch to caffe
