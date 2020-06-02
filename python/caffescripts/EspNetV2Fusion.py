@@ -62,6 +62,9 @@ class ESPNetV2Fusion():
         enc_out_l3 = enc_out_l3_0
         for _ in range(self.reps_at_each_level[1]):
             enc_out_l3, layer_idx = EESP(net, layer_idx, enc_out_l3, out_channel_map[2], out_channel_map[2], stride=1, k=K[2], r_lim=self.recept_limit[2])
+
+        layer_idx = self.rpn_layer(net, layer_idx, enc_out_l3, 48, idx=0)
+
         #TODO: hardcoded 4 here
         enc_out_l4_0, layer_idx = DownSampler(net, layer_idx, enc_out_l3, x, 4, out_channel_map[2], out_channel_map[3], k=K[2], r_lim=self.recept_limit[2], reinf=self.input_reinforcement)
 
@@ -97,7 +100,7 @@ class ESPNetV2Fusion():
         bu_out, layer_idx = EfficientPyrPool(net, layer_idx, bu_out, in_planes=dec_planes[0], proj_planes=pyr_plane_proj, out_planes=dec_planes[1])
 
         # RPN
-        layer_idx = self.rpn_layer(net, layer_idx, bu_out, 48, idx=0)
+        # layer_idx = self.rpn_layer(net, layer_idx, bu_out, 48, idx=0)
 
         #decoding block
         net['deconv{}'.format(layer_idx)] = L.Deconvolution(bu_out,
@@ -186,9 +189,9 @@ class ESPNetV2Fusion():
         net['cls_score'] = L.Sigmoid(cls_score)
         net['centerness'] = L.Sigmoid(centerness)
         net['occlusion'] = L.Sigmoid(occlusion)
-        net['scoremap_perm'] = L.Permute(net['cls_score'], order=[0, 2, 3, 1])
-        net['centernessmap_perm'] = L.Permute(net['centerness'], order=[0, 2, 3, 1])
-        net['occlusionmap_perm'] = L.Permute(net['occlusion'], order=[0, 2, 3, 1])
-        net['regressionmap_perm'] = L.Permute(vetex_pred, order=[0, 2, 3, 1])
+        # net['scoremap_perm'] = L.Permute(net['cls_score'], order=[0, 2, 3, 1])
+        # net['centernessmap_perm'] = L.Permute(net['centerness'], order=[0, 2, 3, 1])
+        # net['occlusionmap_perm'] = L.Permute(net['occlusion'], order=[0, 2, 3, 1])
+        # net['regressionmap_perm'] = L.Permute(vetex_pred, order=[0, 2, 3, 1])
 
         return layer_idx

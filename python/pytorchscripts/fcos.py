@@ -193,7 +193,8 @@ class RPN_M(nn.Module):
         feat = self.tower(feat)
         cls_score  = self.cls_logits(feat)
         centerness = self.centerness(feat)
-        bbox_pred  = scale(self.bbox_pred(feat)).float()
+        # bbox_pred  = scale(self.bbox_pred(feat)).float()
+        bbox_pred  = self.bbox_pred(feat)
         occlusion = self.occlusion(feat)
         return cls_score, bbox_pred, centerness, occlusion
 

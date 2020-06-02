@@ -213,36 +213,39 @@ def EfficientPWConv(
 
     groups = math.gcd(nin, nout)
 
-    caffe_net['pool{}'.format(layer_idx)] = L.Pooling(bottom_blob,
-                                                        pool=P.Pooling.AVE,
-                                                        global_pooling=True)
-
-    caffe_net['conv{}'.format(layer_idx)] = L.Convolution(caffe_net['pool{}'.format(layer_idx)], 
-                                                            num_output=nout,
-                                                            kernel_size=1,
-                                                            stride=1,
-                                                            pad=0,
-                                                            group=1,
-                                                            bias_term=False)
-
-    caffe_net['sigmo{}'.format(layer_idx)] = L.Sigmoid(caffe_net['conv{}'.format(layer_idx)])
-    # wts = caffe_net['sigmo{}'.format(layer_idx)]
-    # layer_idx += 1
-
-
-    caffe_net['tile{}'.format(layer_idx)] = L.Tile(caffe_net['sigmo{}'.format(layer_idx)], axis = 1, tiles = height*width)
-    caffe_net['reshape{}'.format(layer_idx)] = L.Reshape(caffe_net['tile{}'.format(layer_idx)], reshape_param={'shape':{'dim': [0, nout, height, width]}})
-    wts = caffe_net['reshape{}'.format(layer_idx)]
-    layer_idx += 1
-
-
-
-
     x, layer_idx = CBR(caffe_net, layer_idx, bottom_blob, nout, 3, 1, groups)
 
-    caffe_net['prod{}'.format(layer_idx)] = L.Eltwise(wts, x, operation=P.Eltwise.PROD)
 
-    return caffe_net['prod{}'.format(layer_idx)], layer_idx + 1
+
+
+    # caffe_net['pool{}'.format(layer_idx)] = L.Pooling(bottom_blob,
+    #                                                     pool=P.Pooling.AVE,
+    #                                                     global_pooling=True)
+
+    # caffe_net['conv{}'.format(layer_idx)] = L.Convolution(caffe_net['pool{}'.format(layer_idx)], 
+    #                                                         num_output=nout,
+    #                                                         kernel_size=1,
+    #                                                         stride=1,
+    #                                                         pad=0,
+    #                                                         group=1,
+    #                                                         bias_term=False)
+
+    # caffe_net['sigmo{}'.format(layer_idx)] = L.Sigmoid(caffe_net['conv{}'.format(layer_idx)])
+
+    '''
+    caffe_net['tile{}'.format(layer_idx)] = L.Tile(caffe_net['sigmo{}'.format(layer_idx)], axis = 1, tiles = height*width)
+    caffe_net['reshape{}'.format(layer_idx)] = L.Reshape(caffe_net['tile{}'.format(layer_idx)],
+                                                                    reshape_param={'shape':{'dim': [0, nout, height, width]}})
+    '''
+    # caffe_net['flatten{}'.format(layer_idx)] = L.Flatten(caffe_net['sigmo{}'.format(layer_idx)])
+    # caffe_net['scale{}'.format(layer_idx)] = L.Scale(*[x, caffe_net['flatten{}'.format(layer_idx)]], axis=0, bias_term=False)
+
+    # wts = caffe_net['scale{}'.format(layer_idx)]
+
+    # caffe_net['prod{}'.format(layer_idx)] = L.Eltwise(wts, x, operation=P.Eltwise.PROD)
+
+    # return caffe_net['prod{}'.format(layer_idx)], layer_idx + 1
+    return x, layer_idx
 
 
 # def Shuffle(
