@@ -3,6 +3,7 @@
 #include <chrono>
 #include <thread>
 #include <mutex>
+#include <signal.h>
 
 #include <json.hpp>
 #include <spdlog/spdlog.h>
@@ -21,10 +22,10 @@ void *inputDevice;
 void *clsScoreDevice;
 void *centernessDevice;
 void *bboxPredDevice;
-void *l3projDevice;
-void *l2projDevice;
-void *l1projDevice;
-void *l40Device;
+void *encOutL3Device;
+void *encOutL2Device;
+void *encOutL1Device;
+void *downAvg4Device;
 void *segDevice;
 
 
@@ -34,14 +35,20 @@ void *centernessHost;
 void *bboxPredHost;
 void *segHost;
 
-void *l3projDeviceClone;
-void *l2projDeviceClone;
-void *l1projDeviceClone;
-void *l40DeviceClone;
+void *encOutL3DeviceClone;
+void *encOutL2DeviceClone;
+void *encOutL1DeviceClone;
+void *downAvg4DeviceClone;
 
 std::mutex thmutex;
 bool isTimeToStop = false;
 
+
+void sigintHandler(int sig)
+{
+    std::lock_guard<std::mutex> lock(thmutex);
+    isTimeToStop = true;
+}
 
 int main(int ac, char *av[])
 {
@@ -53,13 +60,13 @@ int main(int ac, char *av[])
     assert(ret == cudaSuccess);
     ret = cudaMalloc(&bboxPredDevice, 4 * 60 * 80 * 4);
     assert(ret == cudaSuccess);
-    ret = cudaMalloc(&l3projDevice, 64 * 60 * 80 * 4);
+    ret = cudaMalloc(&encOutL3Device, 128 * 60 * 80 * 4);
     assert(ret == cudaSuccess);
-    ret = cudaMalloc(&l2projDevice, 48 * 120 * 160 * 4);
+    ret = cudaMalloc(&encOutL2Device, 64 * 120 * 160 * 4);
     assert(ret == cudaSuccess);
-    ret = cudaMalloc(&l1projDevice, 32 * 240 * 320 * 4);
+    ret = cudaMalloc(&encOutL1Device, 32 * 240 * 320 * 4);
     assert(ret == cudaSuccess);
-    ret = cudaMalloc(&l40Device, 256 * 30 * 40 * 4);
+    ret = cudaMalloc(&downAvg4Device, 3 * 30 * 40 * 4);
     assert(ret == cudaSuccess);
     ret = cudaMalloc(&segDevice, 13 * 240 * 320 * 4);
     assert(ret == cudaSuccess);
@@ -77,14 +84,16 @@ int main(int ac, char *av[])
     assert(segHost != nullptr);
 
 
-    ret = cudaMalloc(&l3projDeviceClone, 64 * 60 * 80 * 4);
+    ret = cudaMalloc(&encOutL3DeviceClone, 128 * 60 * 80 * 4);
     assert(ret == cudaSuccess);
-    ret = cudaMalloc(&l2projDeviceClone, 48 * 120 * 160 * 4);
+    ret = cudaMalloc(&encOutL2DeviceClone, 64 * 120 * 160 * 4);
     assert(ret == cudaSuccess);
-    ret = cudaMalloc(&l1projDeviceClone, 32 * 240 * 320 * 4);
+    ret = cudaMalloc(&encOutL1DeviceClone, 32 * 240 * 320 * 4);
     assert(ret == cudaSuccess);
-    ret = cudaMalloc(&l40DeviceClone, 256 * 30 * 40 * 4);
+    ret = cudaMalloc(&downAvg4DeviceClone, 3 * 30 * 40 * 4);
     assert(ret == cudaSuccess);
+
+    signal(SIGINT, sigintHandler);
 
 
 
@@ -115,16 +124,19 @@ int main(int ac, char *av[])
 
         std::vector<void *> devbinds1;
         devbinds1.push_back(inputDevice);
+        devbinds1.push_back(downAvg4Device);
+        devbinds1.push_back(encOutL1Device);
+        devbinds1.push_back(encOutL2Device);
+        devbinds1.push_back(encOutL3Device);
         devbinds1.push_back(clsScoreDevice);
         devbinds1.push_back(centernessDevice);
         devbinds1.push_back(bboxPredDevice);
-        devbinds1.push_back(l3projDevice);
-        devbinds1.push_back(l2projDevice);
-        devbinds1.push_back(l1projDevice);
-        devbinds1.push_back(l40Device);
+
+
+
         
         double timesum = 0.0;
-        for (int i = 0; i < 200; ++i)
+        for (int i = 0; i < 1000; ++i)
         {
             std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
 
@@ -136,10 +148,10 @@ int main(int ac, char *av[])
 
             {
             std::lock_guard<std::mutex> lock(thmutex);
-            cudaMemcpyAsync(l3projDeviceClone, l3projDevice, 64 * 60 * 80 * 4, cudaMemcpyDeviceToDevice, stream1);
-            cudaMemcpyAsync(l2projDeviceClone, l2projDevice, 48 * 120 * 160 * 4, cudaMemcpyDeviceToDevice, stream1);
-            cudaMemcpyAsync(l1projDeviceClone, l1projDevice, 32 * 240 * 320 * 4, cudaMemcpyDeviceToDevice, stream1);
-            cudaMemcpyAsync(l40DeviceClone, l40Device, 256 * 30 * 40 * 4, cudaMemcpyDeviceToDevice, stream1);
+            cudaMemcpyAsync(downAvg4DeviceClone, downAvg4Device, 3 * 30 * 40 * 4, cudaMemcpyDeviceToDevice, stream1);
+            cudaMemcpyAsync(encOutL1DeviceClone, encOutL1Device, 32 * 240 * 320 * 4, cudaMemcpyDeviceToDevice, stream1);
+            cudaMemcpyAsync(encOutL2DeviceClone, encOutL2Device, 64 * 120 * 160 * 4, cudaMemcpyDeviceToDevice, stream1);
+            cudaMemcpyAsync(encOutL3DeviceClone, encOutL3Device, 128 * 60 * 80 * 4, cudaMemcpyDeviceToDevice, stream1);
             }
 
             cudaStreamSynchronize(stream1); // Wait for the work in the stream to complete
@@ -148,7 +160,7 @@ int main(int ac, char *av[])
             timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
         }
         cudaStreamDestroy(stream1);
-        SLOG_INFO << "DET FPS: " << 1.0 / (timesum / 200 / 1000.0) << std::endl;
+        SLOG_INFO << "DET FPS: " << 1.0 / (timesum / 1000 / 1000.0) << std::endl;
 
         {
             std::lock_guard<std::mutex> lock(thmutex);
@@ -176,10 +188,10 @@ int main(int ac, char *av[])
         cudaStreamCreateWithPriority(&stream2, cudaStreamNonBlocking, 0);
 
         std::vector<void *> devbinds2;
-        devbinds2.push_back(l3projDeviceClone);
-        devbinds2.push_back(l2projDeviceClone);
-        devbinds2.push_back(l1projDeviceClone);
-        devbinds2.push_back(l40DeviceClone);
+        devbinds2.push_back(encOutL3DeviceClone);
+        devbinds2.push_back(encOutL2DeviceClone);
+        devbinds2.push_back(encOutL1DeviceClone);
+        devbinds2.push_back(downAvg4DeviceClone);
         devbinds2.push_back(segDevice);
 
 
@@ -220,10 +232,10 @@ int main(int ac, char *av[])
     cudaFree(clsScoreDevice);
     cudaFree(centernessDevice);
     cudaFree(bboxPredDevice);
-    cudaFree(l3projDevice);
-    cudaFree(l2projDevice);
-    cudaFree(l1projDevice);
-    cudaFree(l40Device);
+    cudaFree(encOutL3Device);
+    cudaFree(encOutL2Device);
+    cudaFree(encOutL1Device);
+    cudaFree(downAvg4Device);
     cudaFree(segDevice);
 
     free(inputHost);
@@ -232,10 +244,10 @@ int main(int ac, char *av[])
     free(bboxPredHost);
     free(segHost);
 
-    cudaFree(l3projDeviceClone);
-    cudaFree(l2projDeviceClone);
-    cudaFree(l1projDeviceClone);
-    cudaFree(l40DeviceClone);
+    cudaFree(encOutL3DeviceClone);
+    cudaFree(encOutL2DeviceClone);
+    cudaFree(encOutL1DeviceClone);
+    cudaFree(downAvg4DeviceClone);
 
     return 0;
 }
