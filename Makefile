@@ -38,9 +38,10 @@ SRCFILES += $(wildcard src/nie/*.cu)
 # EXAMPLEFILES := examples/mnasneta1fcos_trt_debug.cpp
 # EXAMPLEFILES := examples/mnasneta1fcos_trt_fps.cpp
 # EXAMPLEFILES := examples/espnetv2fusion_trt_debug.cpp
-EXAMPLEFILES := examples/espnetv2fusion_trt_fps.cpp
+# EXAMPLEFILES := examples/espnetv2fusion_trt_fps.cpp
 # EXAMPLEFILES := examples/uninet_trt_fps.cpp
-# EXAMPLEFILES := examples/separate_thread_two_model.cpp
+EXAMPLEFILES := examples/separate_thread_two_model.cpp
+# EXAMPLEFILES := examples/separate_related_model.cpp
 
 OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cu, %.o, $(patsubst %.cpp, %.o, $(SRCFILES) $(EXAMPLEFILES))))
 
