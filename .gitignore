@@ -10,9 +10,8 @@ app/libs
 pics
 app/jni/obj
 **/*.pyc
-obj
+**/*.o
 aurora
-uninetspacetrt
-weight
-libs
+result.jpg
+obj
 data

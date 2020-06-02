@@ -4,7 +4,7 @@
 #include <cassert>
 #include <memory>
 #include "argmax_kernel.h"
-#include "trt_common.h"
+#include "common.h"
 
 
 using namespace nvinfer1;

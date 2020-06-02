@@ -1,66 +1,20 @@
-#include <cstdlib>
 #include <fstream>
-#include <iostream>
-#include <sstream>
 #include <vector>
 #include <chrono>
 #include <thread>
 
 #include <json.hpp>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-
-#include <NvInfer.h>
-#include <NvInferPlugin.h>
-#include <cuda_runtime_api.h>
-#include <glog/logging.h>
-#include "trt_buffers.h"
+#include "log_stream.hpp"
+#include "nv/run_model.hpp"
 
 
-class TrtLogger : public nvinfer1::ILogger 
-{
-   public:
-    TrtLogger();
-    /// Log message
-    /// \param[in] severity, Severity of the message
-    /// \param[in] msg, Message to be logged
-    void log(Severity severity, char const *msg) override;
-
-    /// Set if logging is verbose
-    /// \param[in] verbose If true, logging will be more verbose
-    void SetVerbose(bool const verbose);
-
-   private:
-    bool verbose_;
-};
-
-TrtLogger::TrtLogger() : verbose_(false) {}
-
-void TrtLogger::log(nvinfer1::ILogger::Severity severity, char const *msg)
-{
-    if (verbose_)
-    {
-        std::cout << msg << std::endl;
-    }
-    switch (severity)
-    {
-        case Severity::kVERBOSE:
-        case Severity::kINFO:
-            LOG(INFO) << msg << std::endl;
-            break;
-        case Severity::kWARNING:
-            LOG(WARNING) << msg << std::endl;
-            break;
-        case Severity::kERROR:
-            LOG(ERROR) << msg << std::endl;
-            break;
-        case Severity::kINTERNAL_ERROR:
-            LOG(FATAL) << msg << std::endl;
-            break;
-    }
-}
+static auto LOG = spdlog::stdout_color_mt("MAIN");
 
 void TrtLogger::SetVerbose(bool const verbose) { verbose_ = verbose; }
 
@@ -69,7 +23,7 @@ int main(int ac, char *av[])
 {
     if (ac != 2)
     {
-        LOG(ERROR) << av[0] << " [config_file.json]" << std::endl;
+        SLOG_ERROR << av[0] << " [config_file.json]" << std::endl;
         return 1;
     }
 
@@ -128,27 +82,32 @@ int main(int ac, char *av[])
         intensorPtrB[i] = imnet.data[3 * i + 0] / 255.0f;
     }
 
-    double timesum = 0.0;
-    for (int t = 0; t < EVALUATE_TIMES; ++t)
-    {
-        std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
+    gallopwave::NVModel nvmodel(TRT_ENGINE_PATH);
 
+    // initLibNvInferPlugins(&gLogger.getTRTLogger(), "");
+    // auto trtbuilder = SampleUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(gLogger.getTRTLogger()));
+    // auto trtnetwork = SampleUniquePtr<nvinfer1::INetworkDefinition>(trtbuilder->createNetwork());
+    // auto trtconfig = SampleUniquePtr<nvinfer1::IBuilderConfig>(trtbuilder->createBuilderConfig());
+    // auto trtparser = SampleUniquePtr<nvuffparser::IUffParser>(nvuffparser::createUffParser());
 
-        buffers.copyInputToDevice(); // Memcpy from host input buffers to device input buffers
-        LOG(INFO) << "Memcpy from host input buffers to device input buffers" << std::endl;
+    // // parser->registerInput(mParams.inputTensorNames[0].c_str(), DimsCHW(3, 300, 300), nvuffparser::UffInputOrder::kNCHW);
+    // // parser->registerOutput(mParams.outputTensorNames[0].c_str());
+    // trtparser->parse(TRT_UFF_PATH.c_str(), *trtnetwork, nvinfer1::DataType::kFLOAT);
+    // trtbuilder->setMaxBatchSize(1);
+    // trtconfig->setMaxWorkspaceSize(1_GiB);
 
-        context->execute(1, buffers.getDeviceBindings().data());
-        LOG(INFO) << "Synchronos execute" << std::endl;
+    // std::shared_ptr<nvinfer1::ICudaEngine> engine = 
+    //     std::shared_ptr<nvinfer1::ICudaEngine>(trtbuilder->buildEngineWithConfig(*trtnetwork, *trtconfig), samplesCommon::InferDeleter());
 
-        buffers.copyOutputToHost(); // Memcpy from device output buffers to host output buffers
-        LOG(INFO) << "Memcpy from device output buffers to host output buffers" << std::endl;
-
+    // // std::cout << engine->getBindingDimensions(0).d[0] << std::endl;
+    // // std::cout << engine->getBindingDimensions(0).d[1] << std::endl;
+    // // std::cout << engine->getBindingDimensions(0).d[2] << std::endl;
 
         std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
         timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
     }
 
-    LOG(INFO) << "Uninet FPS: " << 1.0 / (timesum / EVALUATE_TIMES / 1000.0) << std::endl;
+    // nvuffparser::shutdownProtobufLibrary();
 
     return 0;
 }
