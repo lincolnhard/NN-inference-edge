@@ -12,7 +12,7 @@ INCLUDES += -I libraries/spdlog/include
 INCLUDES += -I libraries/nlohmann-json
 INCLUDES += -I /usr/local/cuda/include
 
-DEFINES := -D NDEBUG
+# DEFINES := -D NDEBUG
 
 
 LDFLAGS := -L/usr/lib/aarch64-linux-gnu

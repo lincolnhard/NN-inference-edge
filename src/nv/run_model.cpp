@@ -116,6 +116,58 @@ gallopwave::NVModel::NVModel(std::string prototxtPath,
 }
 
 
+gallopwave::NVModel::NVModel(std::string uffPath,
+                            std::vector<std::pair<std::string, nvinfer1::Dims>>& inTensorNamesShapes,
+                            std::vector<std::string>& outTensorNames,
+                            bool isFP16)
+{
+    initLibNvInferPlugins(&logger, "");
+    auto builder = NVUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(logger));
+    auto network = NVUniquePtr<nvinfer1::INetworkDefinition>(builder->createNetworkV2(0U));
+    auto config = NVUniquePtr<nvinfer1::IBuilderConfig>(builder->createBuilderConfig());
+    auto parser = NVUniquePtr<nvuffparser::IUffParser>(nvuffparser::createUffParser());
+
+    // specify which tensors are inputs (and their dimensions)
+    for (auto const &s : inTensorNamesShapes)
+    {
+        nvuffparser::UffInputOrder order = nvuffparser::UffInputOrder::kNCHW;
+        if (!parser->registerInput(s.first.c_str(), s.second, order))
+        {
+            SLOG_ERROR << "Failed to register input " << s << std::endl;
+            abort();
+        }
+    }
+
+    // specify which tensors are outputs
+    for (auto const &s : outTensorNames)
+    {
+        if (!parser->registerOutput(s.c_str()))
+        {
+            SLOG_ERROR << "Failed to register output " << s << std::endl;
+            abort();
+        }
+    }
+
+    if (!parser->parse(uffPath.c_str(), *network, isFP16 ? nvinfer1::DataType::kHALF : nvinfer1::DataType::kFLOAT))
+    {
+        SLOG_ERROR << "Failed in uff parsing step" << std::endl;
+        abort();
+    }
+
+    builder->setMaxBatchSize(1);
+    config->setMaxWorkspaceSize(36_MiB);
+    if (isFP16)
+    {
+        config->setFlag(nvinfer1::BuilderFlag::kFP16);
+    }
+
+    engine = NVUniquePtr<nvinfer1::ICudaEngine>(builder->buildEngineWithConfig(*network, *config));
+
+    context = NVUniquePtr<nvinfer1::IExecutionContext>(engine->createExecutionContext());
+    initBuffers();
+}
+
+
 gallopwave::NVModel::NVModel(std::string enginePath)
 {
     initLibNvInferPlugins(&logger, "");

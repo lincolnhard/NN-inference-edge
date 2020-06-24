@@ -8,6 +8,7 @@
 #include <NvCaffeParser.h>
 #include <NvOnnxConfig.h>
 #include <NvOnnxParser.h>
+#include <NvUffParser.h>
 #include <cuda_runtime_api.h>
 
 #include "buffers.hpp"
@@ -59,6 +60,11 @@ public:
 
     NVModel(std::string prototxtPath, 
             std::string caffemodelPath,
+            std::vector<std::string>& outTensorNames,
+            bool isFP16);
+
+    NVModel(std::string uffPath,
+            std::vector<std::string>& inTensorNames,
             std::vector<std::string>& outTensorNames,
             bool isFP16);
 
