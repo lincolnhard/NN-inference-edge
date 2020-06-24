@@ -5,11 +5,36 @@
 #include <string>
 #include <unistd.h>
 #include <fcntl.h>
-#include "simplemodel.h"
+#include <android/NeuralNetworks.h>
+#include <vector>
 
 
 #define NUM_ELEM 10
 
+class SimpleModel {
+public:
+    explicit SimpleModel(size_t size, int protect, int fd, size_t offset);
+    ~SimpleModel();
+
+    bool CreateCompiledModel();
+    bool Compute(float inputValue1, float inputValue2, float *result);
+
+private:
+    ANeuralNetworksModel *model_;
+    ANeuralNetworksCompilation *compilation_;
+    ANeuralNetworksMemory *memoryModel_;
+    ANeuralNetworksMemory *memoryInput2_;
+    ANeuralNetworksMemory *memoryOutput_;
+
+    uint32_t dimLength_;
+    uint32_t tensorSize_;
+    size_t offset_;
+
+    std::vector<float> inputTensor1_;
+    int modelDataFd_;
+    int inputTensor2Fd_;
+    int outputTensorFd_;
+};
 
 bool SimpleModel::compute()
 {

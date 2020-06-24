@@ -14,34 +14,17 @@ INCLUDES += -I /usr/local/cuda/include
 
 DEFINES := -D NDEBUG
 
-
-LDFLAGS := -L/usr/lib/aarch64-linux-gnu
-LDFLAGS += -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio -lopencv_dnn
-LDFLAGS += -lglog -lboost_system
-LDFLAGS += -lnvinfer -lnvparsers -lcuda -lnvinfer_plugin -lnvonnxparser -lnvonnxparser_runtime
-LDFLAGS += -L/usr/local/cuda-10.0/targets/aarch64-linux/lib
-LDFLAGS += -lcudart
-LDFLAGS += -pthread -lm
+LDFLAGS += -pthread -lm -lprotobuf
 
 OBJROOT := obj
 
 SRCFILES := $(wildcard src/*.cpp)
-SRCFILES += $(wildcard src/nv/*.cpp)
-SRCFILES += $(wildcard src/nie/*.cpp)
-SRCFILES += $(wildcard src/nie/*.cu)
+SRCFILES += $(wildcard src/onnx/*.cpp)
 
 
-# EXAMPLEFILES := examples/rgpnet_trt_fps.cpp
-# EXAMPLEFILES := examples/rgpnet_trt_debug.cpp
-# EXAMPLEFILES := examples/mobilenetv2ssd_trt_fps.cpp
-# EXAMPLEFILES := examples/mobilenetv2ssd_trt_debug.cpp
-# EXAMPLEFILES := examples/mnasneta1fcos_trt_debug.cpp
-# EXAMPLEFILES := examples/mnasneta1fcos_trt_fps.cpp
-# EXAMPLEFILES := examples/espnetv2fusion_trt_debug.cpp
-# EXAMPLEFILES := examples/espnetv2fusion_trt_fps.cpp
-# EXAMPLEFILES := examples/uninet_trt_fps.cpp
-EXAMPLEFILES := examples/separate_thread_two_model.cpp
-# EXAMPLEFILES := examples/separate_related_model.cpp
+
+EXAMPLEFILES := examples/main-parse-onnx.cpp
+
 
 OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cu, %.o, $(patsubst %.cpp, %.o, $(SRCFILES) $(EXAMPLEFILES))))
 
