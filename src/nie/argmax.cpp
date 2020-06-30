@@ -20,12 +20,13 @@ ArgMax::ArgMax() : axis_(0), type_(DataType::kFLOAT), allow_int8_(true) {
 }
 
 ArgMax::ArgMax(int const axis, Dims const input_dims, Dims const output_dims,
-               DataType const type, bool const allow_int8)
+               DataType const type, bool const allow_int8, bool const keepdims)
     : axis_(axis),
       input_dims_(input_dims),
       output_dims_(output_dims),
       type_(type),
-      allow_int8_(allow_int8) {}
+      allow_int8_(allow_int8),
+      keepdims_(keepdims) {}
 
 ArgMax::ArgMax(void const *data, size_t const length) {
     POSSIBLY_UNUSED_VARIABLE(length);
@@ -65,6 +66,9 @@ int ArgMax::getNbOutputs() const { return 1; }
 
 Dims ArgMax::getOutputDimensions(int index, Dims const *input_dims,
                                  int num_inputs) {
+    // Note that this method is not called if engine is created from serialized data
+    // Therefore keepdims_ etc do no need to be serialized
+
     // Only one input tensor is supported
     assert(num_inputs == 1);
     // Only one output tensor is supported
@@ -72,7 +76,11 @@ Dims ArgMax::getOutputDimensions(int index, Dims const *input_dims,
 
     auto in = input_dims[0];
     Dims out;
-    out.nbDims = in.nbDims - 1;
+    if (keepdims_) {
+        out.nbDims  = in.nbDims;
+    } else {
+        out.nbDims = in.nbDims - 1;
+    }
 
     int axis_mod = axis_;
     if (axis_mod < 0) {
@@ -89,13 +97,23 @@ Dims ArgMax::getOutputDimensions(int index, Dims const *input_dims,
     int out_idx = 0;
     for (int idx = 0; idx < in.nbDims; ++idx) {
         if (idx == axis_mod) {
-            // This axis is flattened out by max
+            if (keepdims_) {
+                out.d[out_idx] = 1;
+#if NV_TENSORRT_MAJOR < 6
+                out.type[out_idx] = in.type[idx];
+#endif
+                out_idx++;
+            } else {
+                // This axis is flattened out by max
+            }
             continue;
         }
 
         // Copy dimension size and type
         out.d[out_idx] = in.d[idx];
+#if NV_TENSORRT_MAJOR < 6
         out.type[out_idx] = in.type[idx];
+#endif
         out_idx++;
     }
 
@@ -105,7 +123,11 @@ Dims ArgMax::getOutputDimensions(int index, Dims const *input_dims,
 bool ArgMax::supportsFormat(DataType type, PluginFormat format) const {
     return (type == DataType::kFLOAT ||
             (allow_int8_ && (type == DataType::kINT8))) &&
+#if NV_TENSORRT_MAJOR >= 6
+           format == PluginFormat::kLINEAR;
+#else
            format == PluginFormat::kNCHW;
+#endif
 }
 
 void ArgMax::configureWithFormat(Dims const *input_dims, int num_inputs,
@@ -114,7 +136,11 @@ void ArgMax::configureWithFormat(Dims const *input_dims, int num_inputs,
                                  int max_batch_size) {
     assert(num_inputs == 1);
     assert(num_outputs == 1);
+#if NV_TENSORRT_MAJOR >= 6
+    assert(format == PluginFormat::kLINEAR);
+#else
     assert(format == PluginFormat::kNCHW);
+#endif
 
     input_dims_ = input_dims[0];
     output_dims_ = output_dims[0];
@@ -155,7 +181,7 @@ size_t ArgMax::getSerializationSize() const {
 void ArgMax::destroy() { delete this; }
 
 IPluginV2 *ArgMax::clone() const {
-    return new ArgMax(axis_, input_dims_, output_dims_, type_, allow_int8_);
+    return new ArgMax(axis_, input_dims_, output_dims_, type_, allow_int8_, keepdims_);
 }
 
 void ArgMax::setPluginNamespace(char const *plugin_namespace) {
@@ -178,6 +204,8 @@ ArgMaxPluginCreator::ArgMaxPluginCreator() {
             PluginField("axis", nullptr, PluginFieldType::kINT32, 1));
         field_collection_static_.emplace_back(
             PluginField("allow_int8", nullptr, PluginFieldType::kINT32, 1));
+        field_collection_static_.emplace_back(
+            PluginField("keepdims", nullptr, PluginFieldType::kINT32, 1));
 
         field_collection_.nbFields = field_collection_static_.size();
         field_collection_.fields = field_collection_static_.data();
@@ -211,6 +239,10 @@ IPluginV2 *ArgMaxPluginCreator::createPlugin(char const *name,
             assert(fields[i].type == PluginFieldType::kINT32);
             auto const allow_int8 = *(static_cast<int const *>(fields[i].data));
             argmax->setAllowInt8(allow_int8);
+        } else if (!strcmp(attrName, "keepdims")) {
+            assert(fields[i].type == PluginFieldType::kINT32);
+            auto const keepdims = *(static_cast<int const *>(fields[i].data));
+            argmax->setKeepdims(keepdims != 0);
         }
     }
 

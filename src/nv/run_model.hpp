@@ -64,7 +64,7 @@ public:
             bool isFP16);
 
     NVModel(std::string uffPath,
-            std::vector<std::string>& inTensorNames,
+            std::vector<std::pair<std::string, nvinfer1::Dims>>& inTensorNamesShapes,
             std::vector<std::string>& outTensorNames,
             bool isFP16);
 

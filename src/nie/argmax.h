@@ -19,9 +19,11 @@ class ArgMax : public nvinfer1::IPluginV2 {
     /// \param[in] type Type of engine (/input data)
     /// \param[in] allow_int8 If true, plugin can use int8 output. This is
     ///     can be required for int8 calculatetions. Default true
+    /// \param[in] keepdims If true, input and output tensors will have
+    ///     same rank. Otherwise output rank is input rank -1.
     ArgMax(int const axis, nvinfer1::Dims const input_dims,
            nvinfer1::Dims const output_dims, nvinfer1::DataType const type,
-           bool const allow_int8);
+           bool const allow_int8, bool const keepdims);
 
     /// Deserialize constructor
     /// \param[in] data Byte stream from which the plugin should be created
@@ -122,6 +124,8 @@ class ArgMax : public nvinfer1::IPluginV2 {
     /// Set if int8 is allowed
     void setAllowInt8(bool const allow_int8);
 
+    /// If set to True, output tensor rank will be same as input tensor rank
+    void setKeepdims(bool const keepdims) {keepdims_ = keepdims;}
    private:
     // Axis of argmax, default is 0
     int axis_;
@@ -143,6 +147,9 @@ class ArgMax : public nvinfer1::IPluginV2 {
     // If true, int8 output is allowed. Note that this will limit the maximum
     // number for argmax to 255 (we count both negative and positive)
     bool allow_int8_;
+
+    // If true, input and output dimensions will have same rank
+    bool keepdims_{false};
 };
 
 class ArgMaxPluginCreator : public nvinfer1::IPluginCreator {

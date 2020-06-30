@@ -14,15 +14,15 @@
             "G": 0.2660,
             "B": 0.2810
         },
-        "net_width": 512,
+        "net_width": 1024,
         "net_height": 512
     },
     "trt":{
-        "onnxpath": "/home/gw/NN-inference-edge/data/mobilenet_ssd_voc.onnx",
-        "engine": "/home/gw/NN-inference-edge/data/mobilenet_ssd_voc_fp16.engine",
-        "input_layer_name": ["input"],
-        "input_layer_shape": [[3, 512, 512]],
-        "output_layer_name": ["cls_logits", "bbox_pred"],
+        "uffpath": "/home/gw/NN-inference-edge/data/bisenet.uff", 
+        "engine": "/home/gw/NN-inference-edge/data/bisenet_fp32.engine",
+        "input_layer_name": ["transpose"],
+        "input_layer_shape": [[3, 512, 1024]],
+        "output_layer_name": ["y_hat/ArgMax"],
         "fp16_mode": true
     }
 }

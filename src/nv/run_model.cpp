@@ -50,6 +50,7 @@ void gallopwave::NVLogger::log(Severity severity, char const *msg)
 gallopwave::NVModel::~NVModel(void)
 {
     nvcaffeparser1::shutdownProtobufLibrary();
+    nvuffparser::shutdownProtobufLibrary();
     cudaStreamDestroy(stream);
 }
 
@@ -57,7 +58,7 @@ gallopwave::NVModel::NVModel(std::string onnxPath, bool isFP16)
 {
     initLibNvInferPlugins(&logger, "");
     auto builder = NVUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(logger));
-    auto network = NVUniquePtr<nvinfer1::INetworkDefinition>(builder->createNetwork());
+    auto network = NVUniquePtr<nvinfer1::INetworkDefinition>(builder->createNetworkV2(0U));
     auto config = NVUniquePtr<nvinfer1::IBuilderConfig>(builder->createBuilderConfig());
     auto parser = NVUniquePtr<nvonnxparser::IParser>(nvonnxparser::createParser(*network, logger));
 
@@ -89,7 +90,7 @@ gallopwave::NVModel::NVModel(std::string prototxtPath,
 {
     initLibNvInferPlugins(&logger, "");
     auto builder = NVUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(logger));
-    auto network = NVUniquePtr<nvinfer1::INetworkDefinition>(builder->createNetwork());
+    auto network = NVUniquePtr<nvinfer1::INetworkDefinition>(builder->createNetworkV2(0U));
     auto config = NVUniquePtr<nvinfer1::IBuilderConfig>(builder->createBuilderConfig());
     auto parser = NVUniquePtr<nvcaffeparser1::ICaffeParser>(nvcaffeparser1::createCaffeParser());
 
@@ -121,6 +122,7 @@ gallopwave::NVModel::NVModel(std::string uffPath,
                             std::vector<std::string>& outTensorNames,
                             bool isFP16)
 {
+    cudaSetDevice(0); // TX2 has only one device
     initLibNvInferPlugins(&logger, "");
     auto builder = NVUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(logger));
     auto network = NVUniquePtr<nvinfer1::INetworkDefinition>(builder->createNetworkV2(0U));
@@ -133,7 +135,7 @@ gallopwave::NVModel::NVModel(std::string uffPath,
         nvuffparser::UffInputOrder order = nvuffparser::UffInputOrder::kNCHW;
         if (!parser->registerInput(s.first.c_str(), s.second, order))
         {
-            SLOG_ERROR << "Failed to register input " << s << std::endl;
+            SLOG_ERROR << "Failed to register input " << s.first << std::endl;
             abort();
         }
     }

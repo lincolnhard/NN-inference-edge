@@ -6,6 +6,7 @@
 
 using namespace nvinfer1;
 
+
 /// \brief CUDA kernel for computing ArgMax
 ///
 /// Each thread computes one output element.
@@ -110,12 +111,6 @@ bool LauncherArgMax(int const num_batches, Dims const in_dims,
         return false;
     }
 
-    auto err = cudaStreamSynchronize(stream);
-    if (cudaSuccess != err) {
-        std::cerr << "LauncherArgMax:Kernel launch failed: "
-                  << cudaGetErrorName(err) << std::endl;
-        return false;
-    }
-
     return true;
 }
+

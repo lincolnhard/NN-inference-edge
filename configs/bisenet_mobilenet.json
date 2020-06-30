@@ -1,0 +1,40 @@
+{
+    "bisenet":{
+        "engine": "/home/gw/NN-inference-edge/data/bisenet_fp32.engine",
+        "mean":{
+            "R": 0.3856,
+            "G": 0.4016,
+            "B": 0.4108
+        },
+        "std":{
+            "R": 0.2572,
+            "G": 0.2660,
+            "B": 0.2810
+        },
+        "net_width": 1024,
+        "net_height": 512,
+        "input_layer_name": ["transpose"],
+        "output_layer_name": ["y_hat/ArgMax"],
+        "image_path": "/home/gw/pics-1800x1600/34-32011071160709133343500.png",
+        "times": 1000
+    },
+    "mobilenetssd":{
+        "engine": "/home/gw/NN-inference-edge/data/mobilenet_ssd_voc_fp32.engine",
+        "mean":{
+            "R": 0.3856,
+            "G": 0.4016,
+            "B": 0.4108
+        },
+        "std":{
+            "R": 0.2572,
+            "G": 0.2660,
+            "B": 0.2810
+        },
+        "net_width": 512,
+        "net_height": 512,
+        "input_layer_name": ["input"],
+        "output_layer_name": ["cls_logits", "bbox_pred"],
+        "image_path": "/home/gw/pics-1800x1600/34-32011071160709133343500.png",
+        "times": 1000
+    }
+}

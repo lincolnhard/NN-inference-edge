@@ -33,10 +33,10 @@ void segFunc(nlohmann::json config)
     const float STDR = config["std"]["R"].get<float>();
     const float STDG = config["std"]["G"].get<float>();
     const float STDB = config["std"]["B"].get<float>();
-    std::vector<std::string> IN_TENSOR_NAMES = config["input_layer"].get<std::vector<std::string> >();
-    std::vector<std::string> OUT_TENSOR_NAMES = config["output_layer"].get<std::vector<std::string> >();
+    std::vector<std::string> IN_TENSOR_NAMES = config["input_layer_name"].get<std::vector<std::string> >();
+    std::vector<std::string> OUT_TENSOR_NAMES = config["output_layer_name"].get<std::vector<std::string> >();
     const std::string TRT_ENGINE_PATH = config["engine"].get<std::string>();
-    const std::string IMPATH = config["images_for_fps"].get<std::string>();
+    const std::string IMPATH = config["image_path"].get<std::string>();
     const int EVALUATE_TIMES = config["times"].get<int>();
 
 
@@ -47,19 +47,20 @@ void segFunc(nlohmann::json config)
     float* intensorPtrB = intensorPtrG + NET_PLANESIZE;
 
 
+    cv::Mat im = cv::imread(IMPATH);
+    cv::Mat imnet;
+    cv::resize(im, imnet, cv::Size(NETW, NETH));
+    for (int i = 0; i < NET_PLANESIZE; ++i)
+    {
+        intensorPtrR[i] = ((imnet.data[3 * i + 2] / 255.0f) - MEANR) / STDR;
+        intensorPtrG[i] = ((imnet.data[3 * i + 1] / 255.0f) - MEANG) / STDG;
+        intensorPtrB[i] = ((imnet.data[3 * i + 0] / 255.0f) - MEANB) / STDB;
+    }
+    
     int loopCount = 0;
     double timesum = 0.0;
     while (1)
     {
-        cv::Mat imnet = cv::imread(cv::format(IMPATH.c_str(), (loopCount % 10) + 1));
-        for (int i = 0; i < NET_PLANESIZE; ++i)
-        {
-            intensorPtrR[i] = ((imnet.data[3 * i + 2] / 255.0f) - MEANR) / STDR;
-            intensorPtrG[i] = ((imnet.data[3 * i + 1] / 255.0f) - MEANG) / STDG;
-            intensorPtrB[i] = ((imnet.data[3 * i + 0] / 255.0f) - MEANB) / STDB;
-        }
-
-
         std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
 
 
@@ -94,10 +95,10 @@ void detFunc(nlohmann::json config)
     const float STDR = config["std"]["R"].get<float>();
     const float STDG = config["std"]["G"].get<float>();
     const float STDB = config["std"]["B"].get<float>();
-    std::vector<std::string> IN_TENSOR_NAMES = config["input_layer"].get<std::vector<std::string> >();
-    std::vector<std::string> OUT_TENSOR_NAMES = config["output_layer"].get<std::vector<std::string> >();
+    std::vector<std::string> IN_TENSOR_NAMES = config["input_layer_name"].get<std::vector<std::string> >();
+    std::vector<std::string> OUT_TENSOR_NAMES = config["output_layer_name"].get<std::vector<std::string> >();
     const std::string TRT_ENGINE_PATH = config["engine"].get<std::string>();
-    const std::string IMPATH = config["images_for_fps"].get<std::string>();
+    const std::string IMPATH = config["image_path"].get<std::string>();
     const int EVALUATE_TIMES = config["times"].get<int>();
 
 
@@ -107,17 +108,21 @@ void detFunc(nlohmann::json config)
     float* intensorPtrG = intensorPtrR + NET_PLANESIZE;
     float* intensorPtrB = intensorPtrG + NET_PLANESIZE;
 
+
+    cv::Mat im = cv::imread(IMPATH);
+    cv::Mat imnet;
+    cv::resize(im, imnet, cv::Size(NETW, NETH));
+    for (int i = 0; i < NET_PLANESIZE; ++i)
+    {
+        intensorPtrR[i] = ((imnet.data[3 * i + 2] / 255.0f) - MEANR) / STDR;
+        intensorPtrG[i] = ((imnet.data[3 * i + 1] / 255.0f) - MEANG) / STDG;
+        intensorPtrB[i] = ((imnet.data[3 * i + 0] / 255.0f) - MEANB) / STDB;
+    }
+
+
     double timesum = 0.0;
     for (int t = 0; t < EVALUATE_TIMES; ++t)
     {
-        cv::Mat imnet = cv::imread(cv::format(IMPATH.c_str(), (t % 10) + 1));
-        for (int i = 0; i < NET_PLANESIZE; ++i)
-        {
-            intensorPtrR[i] = ((imnet.data[3 * i + 2] / 255.0f) - MEANR) / STDR;
-            intensorPtrG[i] = ((imnet.data[3 * i + 1] / 255.0f) - MEANG) / STDG;
-            intensorPtrB[i] = ((imnet.data[3 * i + 0] / 255.0f) - MEANB) / STDB;
-        }
-
 
         std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
 
@@ -153,8 +158,8 @@ int main(int ac, char *av[])
     fin.close();
 
 
-    auto segmentationConfig = config["rgp"];
-    auto detectionConfig = config["mobilessd"];
+    auto segmentationConfig = config["bisenet"];
+    auto detectionConfig = config["mobilenetssd"];
 
     std::thread segmentationThread(segFunc, segmentationConfig);
     std::thread detectionThread(detFunc, detectionConfig);
