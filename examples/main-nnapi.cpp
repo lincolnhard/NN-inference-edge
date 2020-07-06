@@ -140,7 +140,6 @@ void conv2d (ANeuralNetworksModel *model,
     parameterIdxes.push_back(index);
     ++index;
 
-#if 0 // only work for android sdk version >= 29
     operandType.type = ANEURALNETWORKS_BOOL;
     CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
     operandIdxes[name + "_isNCHW"] = index;
@@ -160,7 +159,7 @@ void conv2d (ANeuralNetworksModel *model,
     CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, index, &dilationY, sizeof(dilationY)) );
     parameterIdxes.push_back(index);
     ++index;
-#endif
+
 
 
     const auto inDims = shapeIdxes.at(input);
@@ -187,51 +186,65 @@ void conv2d (ANeuralNetworksModel *model,
 
 
 
-int32_t getAndroidSdkVersion()
+void getAndroidSdkVersion()
 {
+    int32_t result = 0;
     const char* sdkProp = "ro.build.version.sdk";
     char sdkVersion[PROP_VALUE_MAX];
     int length = __system_property_get(sdkProp, sdkVersion);
     if (length != 0) 
     {
-        int32_t result = 0;
         for (int i = 0; i < length; ++i)
         {
             int digit = sdkVersion[i] - '0';
             if (digit < 0 || digit > 9)
             {
-                // Non-numeric SDK version, assume it's higher than expected;
-                return 0xffff;
+                SLOG_INFO << "Non-numeric SDK version, assume it's higher than expected" << std::endl;
             }
 
             result = result * 10 + digit;
         }
-        // TODO(levp): remove once SDK gets updated to 29th level
-        // Upgrade SDK version for pre-release Q to be able to test functionality
-        // available from SDK level 29.
-        if (result == 28)
-        {
-            char versionCodename[PROP_VALUE_MAX];
-            const char* versionCodenameProp = "ro.build.version.codename";
-            length = __system_property_get(versionCodenameProp, versionCodename);
-            if (length != 0)
-            {
-                if (versionCodename[0] == 'Q')
-                {
-                    return 29;
-                }
-            }
-        }
+        SLOG_INFO << "Android SDK version: " << result << std::endl;
+    }
+    else
+    {
+        SLOG_INFO << "Failed parsing Android SDK version" << std::endl;
+    }
+}
 
-        return result;
+
+void getDevices()
+{
+    uint32_t deviceCount;
+    CHECK_NNAPI_ERROR( ANeuralNetworks_getDeviceCount(&deviceCount) );
+    // SLOG_INFO << "deviceCount: " << deviceCount << std::endl;
+    for (int i = 0; i < deviceCount; ++i)
+    {
+        ANeuralNetworksDevice *nnDevice;
+        CHECK_NNAPI_ERROR( ANeuralNetworks_getDevice(i, &nnDevice) );
+        const char *nnDeviceName;
+        CHECK_NNAPI_ERROR( ANeuralNetworksDevice_getName(nnDevice, &nnDeviceName) );
+        int64_t featureLevel;
+        CHECK_NNAPI_ERROR( ANeuralNetworksDevice_getFeatureLevel(nnDevice, &featureLevel) );
+        int32_t type;
+        CHECK_NNAPI_ERROR( ANeuralNetworksDevice_getType(nnDevice, &type) );
+        const char *nnVersion;
+        CHECK_NNAPI_ERROR( ANeuralNetworksDevice_getVersion(nnDevice, &nnVersion) );
+        SLOG_INFO << nnDeviceName << ',' << featureLevel << ',' << type << ',' << nnVersion << std::endl;
     }
 
-    return 0;
+    SLOG_INFO << "ANEURALNETWORKS_DEVICE_ACCELERATOR: " << ANEURALNETWORKS_DEVICE_ACCELERATOR << std::endl;
+    SLOG_INFO << "ANEURALNETWORKS_DEVICE_CPU: " << ANEURALNETWORKS_DEVICE_CPU << std::endl;
+    SLOG_INFO << "ANEURALNETWORKS_DEVICE_GPU: " << ANEURALNETWORKS_DEVICE_GPU << std::endl;
+    SLOG_INFO << "ANEURALNETWORKS_DEVICE_OTHER: " << ANEURALNETWORKS_DEVICE_OTHER << std::endl;
+    SLOG_INFO << "ANEURALNETWORKS_DEVICE_UNKNOWN: " << ANEURALNETWORKS_DEVICE_UNKNOWN << std::endl;
 }
+
 
 int main()
 {
-    SLOG_INFO << "Android SDK version: " << getAndroidSdkVersion() << std::endl;
+    getAndroidSdkVersion();
+    getDevices();
 
     ANeuralNetworksModel *model = nullptr;
     ANeuralNetworksCompilation *compilation = nullptr;
@@ -373,6 +386,8 @@ int main()
     delete [] indata1;
     ANeuralNetworksMemory_free(nnOutMem1);
     close(fdout1);
+
+
 
     SLOG_INFO << "fin" << std::endl;
     return 0;
