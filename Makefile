@@ -2,7 +2,8 @@
 CXXCL := g++
 NVCXX := nvcc
 
-CXXFLAGS := -O3 -std=c++14
+CXXFLAGS := -O3 -std=c++17
+NVCXXFLAGS := -O3 -std=c++14
 
 CUDA_ARCH := -gencode arch=compute_53,code=sm_53 -gencode arch=compute_62,code=sm_62 -gencode arch=compute_72,code=sm_72
 
@@ -21,7 +22,7 @@ LDFLAGS += -lglog -lboost_system
 LDFLAGS += -lnvinfer -lnvparsers -lcuda -lnvinfer_plugin -lnvonnxparser -lnvonnxparser_runtime
 LDFLAGS += -L/usr/local/cuda-10.0/targets/aarch64-linux/lib
 LDFLAGS += -lcudart
-LDFLAGS += -pthread -lm
+LDFLAGS += -pthread -lm -lstdc++fs
 
 OBJROOT := obj
 
@@ -31,20 +32,12 @@ SRCFILES += $(wildcard src/nie/*.cpp)
 SRCFILES += $(wildcard src/nie/*.cu)
 
 
-# EXAMPLEFILES := examples/rgpnet_trt_fps.cpp
-# EXAMPLEFILES := examples/rgpnet_trt_debug.cpp
-# EXAMPLEFILES := examples/mobilenetv2ssd_trt_fps.cpp
-# EXAMPLEFILES := examples/mobilenetv2ssd_trt_debug.cpp
-# EXAMPLEFILES := examples/mnasneta1fcos_trt_debug.cpp
-# EXAMPLEFILES := examples/mnasneta1fcos_trt_fps.cpp
-# EXAMPLEFILES := examples/espnetv2fusion_trt_debug.cpp
-# EXAMPLEFILES := examples/espnetv2fusion_trt_fps.cpp
-# EXAMPLEFILES := examples/uninet_trt_fps.cpp
-# EXAMPLEFILES := examples/separate_thread_two_model.cpp
-# EXAMPLEFILES := examples/separate_related_model.cpp
+
+EXAMPLEFILES := examples/bisenet.cpp
+# EXAMPLEFILES := examples/mobilenetv2ssd.cpp
 # EXAMPLEFILES := examples/main-create-engine.cpp
 # EXAMPLEFILES := examples/main-test-engine-fps.cpp
-EXAMPLEFILES := examples/main-multiple.cpp
+# EXAMPLEFILES := examples/main-multiple.cpp
 
 OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cu, %.o, $(patsubst %.cpp, %.o, $(SRCFILES) $(EXAMPLEFILES))))
 
@@ -62,7 +55,7 @@ all: obj $(OBJS)
 $(OBJROOT)/%.o: %.cpp
 	$(CXXCL) -c -pipe $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o $@
 $(OBJROOT)/%.o: %.cu
-	$(NVCXX) -c $(CXXFLAGS) $(CUDA_ARCH) $(DEFINES) $(INCLUDES) $< -o $@
+	$(NVCXX) -c $(NVCXXFLAGS) $(CUDA_ARCH) $(DEFINES) $(INCLUDES) $< -o $@
 
 obj:
 	mkdir -vp $(OBJROOT) $(dir $(OBJS))

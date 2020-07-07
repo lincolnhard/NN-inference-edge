@@ -1,21 +1,14 @@
 {
     "evaluate":{
         "times": 1000,
-        "image_path": "/home/gw/pics-1800x1600/34-32011071160709133343500.png"
+        "image_path": "/home/gw/pics-1024x512/road3.png",
+        "folder_path": "/home/gw/pics-1024x512",
+        "extension": ".png"
     },
     "model":{
-        "mean":{
-            "R": 0.3856,
-            "G": 0.4016,
-            "B": 0.4108
-        },
-        "std":{
-            "R": 0.2572,
-            "G": 0.2660,
-            "B": 0.2810
-        },
         "net_width": 1024,
-        "net_height": 512
+        "net_height": 512,
+        "max_classes": 50
     },
     "trt":{
         "uffpath": "/home/gw/NN-inference-edge/data/bisenet.uff", 
@@ -23,6 +16,7 @@
         "input_layer_name": ["transpose"],
         "input_layer_shape": [[3, 512, 1024]],
         "output_layer_name": ["y_hat/ArgMax"],
+        "output_layer_shape": [[512, 1024]],
         "fp16_mode": true
     }
 }

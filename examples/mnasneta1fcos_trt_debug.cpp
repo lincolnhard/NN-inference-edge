@@ -18,7 +18,7 @@ static auto LOG = spdlog::stdout_color_mt("MAIN");
 
 
 
-void plotShapes(cv::Mat &im, std::vector<std::vector<KeyPoint>> &result, std::vector<int> num_vertex_byclass)
+void plotResult(cv::Mat &im, std::vector<std::vector<KeyPoint>> &result, std::vector<int> num_vertex_byclass)
 {
     const int numClass = result.size();
     for (int clsIdx = 0; clsIdx < numClass; ++clsIdx)
@@ -110,7 +110,7 @@ int main(int ac, char *av[])
     std::vector<const float *> featuremaps {scoresTensor, centernessTensor, vertexTensor, occlusionsTensor};
     auto result = postprocesser.run(featuremaps);
 
-    plotShapes(imnet, result, NUM_VERTEX_BYCLASS);
+    plotResult(imnet, result, NUM_VERTEX_BYCLASS);
     cv::imwrite("result.jpg", imnet);
 
 
