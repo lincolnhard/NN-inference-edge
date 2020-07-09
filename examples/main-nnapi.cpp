@@ -217,7 +217,7 @@ void getDevices()
 {
     uint32_t deviceCount;
     CHECK_NNAPI_ERROR( ANeuralNetworks_getDeviceCount(&deviceCount) );
-    // SLOG_INFO << "deviceCount: " << deviceCount << std::endl;
+    SLOG_INFO << "NNAPI device list: " << std::endl;
     for (int i = 0; i < deviceCount; ++i)
     {
         ANeuralNetworksDevice *nnDevice;
@@ -232,12 +232,6 @@ void getDevices()
         CHECK_NNAPI_ERROR( ANeuralNetworksDevice_getVersion(nnDevice, &nnVersion) );
         SLOG_INFO << nnDeviceName << ',' << featureLevel << ',' << type << ',' << nnVersion << std::endl;
     }
-
-    SLOG_INFO << "ANEURALNETWORKS_DEVICE_ACCELERATOR: " << ANEURALNETWORKS_DEVICE_ACCELERATOR << std::endl;
-    SLOG_INFO << "ANEURALNETWORKS_DEVICE_CPU: " << ANEURALNETWORKS_DEVICE_CPU << std::endl;
-    SLOG_INFO << "ANEURALNETWORKS_DEVICE_GPU: " << ANEURALNETWORKS_DEVICE_GPU << std::endl;
-    SLOG_INFO << "ANEURALNETWORKS_DEVICE_OTHER: " << ANEURALNETWORKS_DEVICE_OTHER << std::endl;
-    SLOG_INFO << "ANEURALNETWORKS_DEVICE_UNKNOWN: " << ANEURALNETWORKS_DEVICE_UNKNOWN << std::endl;
 }
 
 
@@ -337,7 +331,7 @@ int main()
     // Set the output tensor that will be filled by executing the model.
     // We use shared memory here to minimize the copies needed for getting the output data.
     // Note that the index here uses the operand of the model output list, not all operand list
-    for (size_t i = 0; i < INPUT_INDICES.size(); ++i)
+    for (size_t i = 0; i < OUTPUT_INDICES.size(); ++i)
     {
         CHECK_NNAPI_ERROR( ANeuralNetworksExecution_setOutputFromMemory(execution, static_cast<int32_t>(i), nullptr, OUTPUT_DATA[i], 0, OUTPUT_SIZES[i] * sizeof(float)) );
     }

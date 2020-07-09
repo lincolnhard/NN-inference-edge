@@ -3,8 +3,10 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := aurora-android
-LOCAL_SRC_FILES := examples/main-nnapi.cpp
+LOCAL_SRC_FILES := examples/main-build-nnapi.cpp
 LOCAL_SRC_FILES += $(addprefix src/, $(notdir $(wildcard $(LOCAL_PATH)/src/*.cpp)))
+LOCAL_SRC_FILES += $(addprefix src/napi/, $(notdir $(wildcard $(LOCAL_PATH)/src/napi/*.cpp)))
+# $(error Debug usage: $(LOCAL_SRC_FILES))
 LOCAL_C_INCLUDES += /Users/lincolnlee/Documents/NN-inference-edge/libraries/nlohmann-json
 LOCAL_C_INCLUDES += /Users/lincolnlee/Documents/NN-inference-edge/libraries/spdlog/include
 LOCAL_C_INCLUDES += /Users/lincolnlee/Documents/NN-inference-edge/src
