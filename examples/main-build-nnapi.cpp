@@ -24,40 +24,41 @@ int main()
     const uint32_t NET_IN_SIZE = NET_WIDTH * NET_HEIGHT * NET_CHANNELS;
 
     // input
-    float *indataptr = new float[NET_IN_SIZE];
-    std::fill(indataptr, indataptr + NET_IN_SIZE, 1.0f);
+    uint8_t *indataptr = new uint8_t[NET_IN_SIZE];
+    std::fill(indataptr, indataptr + NET_IN_SIZE, 1);
 
     // kernels
-    float dummyWeightBuf[16 * 5 * 5 * 3];
-    float dummyBiasBuf[16];
-    std::fill(dummyWeightBuf, dummyWeightBuf + (16 * 5 * 5 * 3), 2.0f);
-    std::fill(dummyBiasBuf, dummyBiasBuf + 16, 1.0f);
+    uint8_t dummyWeightBuf[16 * 5 * 5 * 3];
+    int32_t dummyBiasBuf[16];
+    std::fill(dummyWeightBuf, dummyWeightBuf + (16 * 5 * 5 * 3), 2);
+    std::fill(dummyBiasBuf, dummyBiasBuf + 16, 1);
 
     // start to build
-    builder.addTensor("data", {1, NET_HEIGHT, NET_WIDTH, NET_CHANNELS});
-    builder.addTensor("conv2d_1_weight", {16, 5, 5, 3}, dummyWeightBuf);
-    builder.addTensor("conv2d_1_bias", {16}, dummyBiasBuf);
+    builder.addTensor("data", {1, NET_HEIGHT, NET_WIDTH, NET_CHANNELS}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.addTensor("conv2d_1_weight", {16, 5, 5, 3}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, dummyWeightBuf, 0.1, 1);
+    builder.addTensor("conv2d_1_bias", {16}, ANEURALNETWORKS_TENSOR_INT32, dummyBiasBuf, 0.1, 1);
 
-    builder.conv2d("conv2d_1", "data", "conv2d_1_weight", "conv2d_1_bias",
+    builder.conv2d("conv2d_1", "data", "conv2d_1_weight", "conv2d_1_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     2, 2, 2, 2, 1, 1, ANEURALNETWORKS_FUSED_NONE, false, 1, 1,
-                    "conv2d_1_out");
+                    "conv2d_1_out", 0.5, 100);
 
     // set input/output
-    builder.setInputOps("data", indataptr);
-    builder.setOutputOps("conv2d_1_out");
+    builder.setInputOps("data", indataptr, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv2d_1_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
 
     // compile
-    builder.compile(0);
+    builder.compile(1);
 
     // execute
     builder.execute();
 
     // validate
-    std::vector<float *> results = builder.getOutput();
+    std::vector<void *> results = builder.getOutput();
 
     for (int32_t idx = 0; idx < 10; ++idx)
     {
-        SLOG_INFO << results[0][idx] << std::endl;
+        uint8_t *result0 = reinterpret_cast<uint8_t *>(results[0]);
+        SLOG_INFO << (int)(result0[idx]) << std::endl;
     }
 
 

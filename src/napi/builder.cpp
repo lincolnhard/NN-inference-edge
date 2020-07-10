@@ -64,6 +64,24 @@ void ModelBuilder::getDevices()
     }
 }
 
+
+size_t ModelBuilder::getElementSize(int32_t opType)
+{
+    switch (opType)
+    {
+        case ANEURALNETWORKS_TENSOR_FLOAT32:
+            return 4;
+        case ANEURALNETWORKS_TENSOR_INT32:
+            return 4;
+        case ANEURALNETWORKS_TENSOR_QUANT8_ASYMM:
+            return 1;
+        default:
+            SLOG_ERROR << "Not supported operand type: " <<  opType << std::endl;
+            exit(1);
+    }
+}
+
+
 ModelBuilder::~ModelBuilder()
 {
     for (auto it: outputOps)
@@ -86,13 +104,14 @@ ModelBuilder::ModelBuilder()
 
 void ModelBuilder::addTensor (std::string name,
                             std::vector<uint32_t> dims,
+                            int32_t opType,
                             const void *srcbuffer,
                             float scale,
                             int32_t zeroPoint
                             )
 {
     ANeuralNetworksOperandType operandType;
-    operandType.type = ANEURALNETWORKS_TENSOR_FLOAT32; // TODO: Support only FP32 now
+    operandType.type = opType;
     operandType.dimensionCount = static_cast<uint32_t>(dims.size());
     operandType.dimensions = dims.data();
     operandType.scale = scale;
@@ -103,8 +122,7 @@ void ModelBuilder::addTensor (std::string name,
 
     if (srcbuffer != nullptr)
     {
-        size_t elementSize = 4; // TODO: Support only FP32 now
-        const size_t bytes = elementSize * std::accumulate(dims.begin(), dims.end(), 1, std::multiplies<uint32_t>());
+        const size_t bytes = getElementSize(opType) * std::accumulate(dims.begin(), dims.end(), 1, std::multiplies<uint32_t>());
         CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, srcbuffer, bytes) );
     }
     ++opIdx;
@@ -114,17 +132,20 @@ void ModelBuilder::conv2d (std::string name,
                         const std::string &input,
                         const std::string &weight,
                         const std::string &bias,
-                        const int32_t padLeft,
-                        const int32_t padRight,
-                        const int32_t padTop,
-                        const int32_t padBottom,
-                        const int32_t strideX,
-                        const int32_t strideY,
-                        const FuseCode fusecode,
-                        const bool isNCHW,
-                        const int32_t dilationX,
-                        const int32_t dilationY,
-                        const std::string &output
+                        int32_t opType,
+                        int32_t padLeft,
+                        int32_t padRight,
+                        int32_t padTop,
+                        int32_t padBottom,
+                        int32_t strideX,
+                        int32_t strideY,
+                        FuseCode fusecode,
+                        bool isNCHW,
+                        int32_t dilationX,
+                        int32_t dilationY,
+                        const std::string &output,
+                        float scaleOutOp,
+                        int32_t zeroPointOutOp
                         )
 {
     std::vector<uint32_t> parameterIdxes;
@@ -217,9 +238,11 @@ void ModelBuilder::conv2d (std::string name,
     std::vector<uint32_t> outDims = {outN, outH, outW, outC};
 
     std::vector<uint32_t> outIdxes;
-    operandType.type = ANEURALNETWORKS_TENSOR_FLOAT32; // TODO: Support only FP32 now
+    operandType.type = opType;
     operandType.dimensionCount = static_cast<uint32_t>(inDims.size());
     operandType.dimensions = outDims.data();
+    operandType.scale = scaleOutOp;
+    operandType.zeroPoint = zeroPointOutOp;
     CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
 
     operandIdxes[output] = opIdx;
@@ -230,23 +253,23 @@ void ModelBuilder::conv2d (std::string name,
     CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperation(model, ANEURALNETWORKS_CONV_2D, parameterIdxes.size(), &parameterIdxes[0], outIdxes.size(), &outIdxes[0]) );
 }
 
-void ModelBuilder::setInputOps (std::string name, float* dataptr)
+void ModelBuilder::setInputOps (std::string name, void* dataptr, int32_t opType)
 {
     uint32_t idx = operandIdxes.at(name);
     std::vector<uint32_t> shape = shapeIdxes.at(name);
-    uint32_t sizebyte = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint32_t>()) * sizeof(float); // TODO: Support only FP32 now
+    uint32_t sizebyte = getElementSize(opType) * std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint32_t>());
     inputOps.push_back({idx, shape, sizebyte, name, dataptr});
 }
 
-void ModelBuilder::setOutputOps (std::string name)
+void ModelBuilder::setOutputOps (std::string name, int32_t opType)
 {
     uint32_t idx = operandIdxes.at(name);
     std::vector<uint32_t> shape = shapeIdxes.at(name);
-    uint32_t sizebyte = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint32_t>()) * sizeof(float); // TODO: Support only FP32 now
+    uint32_t sizebyte = getElementSize(opType) * std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint32_t>());
     int fd = ASharedMemory_create("an_optional_name", sizebyte);
-    ANeuralNetworksMemory *memptr;
+    ANeuralNetworksMemory *memptr = nullptr;
     CHECK_NNAPI_ERROR( ANeuralNetworksMemory_createFromFd(sizebyte, PROT_READ | PROT_WRITE, fd, 0, &memptr) );
-    float* dataptr = reinterpret_cast<float *>(mmap(nullptr, sizebyte, PROT_READ, MAP_SHARED, fd, 0));
+    void* dataptr = mmap(nullptr, sizebyte, PROT_READ, MAP_SHARED, fd, 0);
     outputOps.push_back({idx, shape, sizebyte, name, dataptr, fd, memptr});
 }
 
@@ -283,6 +306,7 @@ void ModelBuilder::compile (int32_t dIdx)
     }
     else
     {
+        // auto select
         CHECK_NNAPI_ERROR( ANeuralNetworksCompilation_create(model, &compilation) );
     }
     CHECK_NNAPI_ERROR( ANeuralNetworksCompilation_setPreference(compilation, ANEURALNETWORKS_PREFER_FAST_SINGLE_ANSWER) );
@@ -312,9 +336,9 @@ void ModelBuilder::execute (void)
     CHECK_NNAPI_ERROR( ANeuralNetworksEvent_wait(event) );
 }
 
-std::vector<float *> ModelBuilder::getOutput(void)
+std::vector<void *> ModelBuilder::getOutput(void)
 {
-    std::vector<float *> outputTensorPtrs;
+    std::vector<void *> outputTensorPtrs;
     for (auto it: outputOps)
     {
         outputTensorPtrs.push_back(it.data);

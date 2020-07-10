@@ -27,9 +27,9 @@ public:
     std::vector<uint32_t> dimensions;
     uint32_t sizeBytes;
     std::string name;
-    float *data;                            // TODO: Support only FP32 now
-    int fd;                                 // for shared memory
-    ANeuralNetworksMemory *nnMemPtr;        // mapped memory to shared memory
+    void *data;
+    int fd;                                     // for shared memory
+    ANeuralNetworksMemory *nnMemPtr;            // mapped memory to shared memory
 };
 
 class ModelBuilder
@@ -39,18 +39,21 @@ public:
     ~ModelBuilder(void);
     void getSdkVersion (void);
     void getDevices (void);
-    void addTensor (std::string name, std::vector<uint32_t> dims,
-                    const void *srcbuffer = nullptr, float scale = 0.0f, int32_t zeroPoint = 0);
+    void addTensor (std::string name, std::vector<uint32_t> dims, int32_t opType,
+                    const void *srcbuffer = nullptr, float scale = 1.0f, int32_t zeroPoint = 0);
+
     void conv2d (std::string name, const std::string &input, const std::string &weight,
-                const std::string &bias, const int32_t padLeft, const int32_t padRight,
-                const int32_t padTop, const int32_t padBottom, const int32_t strideX,
-                const int32_t strideY, const FuseCode fusecode, const bool isNCHW,
-                const int32_t dilationX, const int32_t dilationY, const std::string &output);
-    void setInputOps (std::string name, float* dataptr);
-    void setOutputOps (std::string name);
+                const std::string &bias, int32_t opType, int32_t padLeft, int32_t padRight,
+                int32_t padTop, int32_t padBottom, int32_t strideX,
+                int32_t strideY, FuseCode fusecode, bool isNCHW,
+                int32_t dilationX, int32_t dilationY, const std::string &output,
+                float scaleOutOp = 1.0f, int32_t zeroPointOutOp = 0);
+
+    void setInputOps (std::string name, void* dataptr, int32_t opType);
+    void setOutputOps (std::string name, int32_t opType);
     void compile(int32_t deviceIndex = -1);
     void execute(void);
-    std::vector<float *> getOutput(void);
+    std::vector<void *> getOutput(void);
 private:
     uint32_t opIdx;
     std::map<std::string, uint32_t> operandIdxes;
@@ -63,7 +66,8 @@ private:
     ANeuralNetworksExecution *execution;
     ANeuralNetworksEvent *event;
     std::vector<ANeuralNetworksDevice *> devices;
-    
+
+    size_t getElementSize(int32_t opType);
 };
 
 }
