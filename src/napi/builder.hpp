@@ -40,14 +40,13 @@ public:
     void getSdkVersion (void);
     void getDevices (void);
     void addTensor (std::string name, std::vector<uint32_t> dims, int32_t opType,
-                    const void *srcbuffer = nullptr, float scale = 1.0f, int32_t zeroPoint = 0);
+                    const void *srcbuffer = nullptr, float scale = 0.1f, int32_t zeroPoint = 0);
 
     void conv2d (std::string name, const std::string &input, const std::string &weight,
                 const std::string &bias, int32_t opType, int32_t padLeft, int32_t padRight,
-                int32_t padTop, int32_t padBottom, int32_t strideX,
-                int32_t strideY, FuseCode fusecode, bool isNCHW,
-                int32_t dilationX, int32_t dilationY, const std::string &output,
-                float scaleOutOp = 1.0f, int32_t zeroPointOutOp = 0);
+                int32_t padTop, int32_t padBottom, int32_t strideX, int32_t strideY,
+                bool isDepthWise, FuseCode fusecode, const std::string &output,
+                float scaleOutOp = 0.1f, int32_t zeroPointOutOp = 0);
 
     void setInputOps (std::string name, void* dataptr, int32_t opType);
     void setOutputOps (std::string name, int32_t opType);

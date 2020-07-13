@@ -7,6 +7,7 @@
 #include <numeric>
 #include <functional>
 #include <algorithm>
+#include <cassert>
 
 #include <unistd.h>
 
@@ -139,10 +140,8 @@ void ModelBuilder::conv2d (std::string name,
                         int32_t padBottom,
                         int32_t strideX,
                         int32_t strideY,
+                        bool isDepthWise,
                         FuseCode fusecode,
-                        bool isNCHW,
-                        int32_t dilationX,
-                        int32_t dilationY,
                         const std::string &output,
                         float scaleOutOp,
                         int32_t zeroPointOutOp
@@ -200,40 +199,32 @@ void ModelBuilder::conv2d (std::string name,
     parameterIdxes.push_back(opIdx);
     ++opIdx;
 
+    if (isDepthWise)
+    {
+        int32_t depthMultiplier = 1; // TODO: Support only for depth_multiplier == 1 now
+        CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+        operandIdxes[name + "_depthMultiplier"] = opIdx;
+        CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &depthMultiplier, sizeof(depthMultiplier)) );
+        parameterIdxes.push_back(opIdx);
+        ++opIdx;
+    }
+
+
     CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
     operandIdxes[name + "_activation"] = opIdx;
     CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &fusecode, sizeof(fusecode)) );
     parameterIdxes.push_back(opIdx);
     ++opIdx;
 
-#if 0
-    operandType.type = ANEURALNETWORKS_BOOL;
-    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
-    operandIdxes[name + "_isNCHW"] = opIdx;
-    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &isNCHW, sizeof(isNCHW)) );
-    parameterIdxes.push_back(opIdx);
-    ++opIdx;
-
-    operandType.type = ANEURALNETWORKS_INT32;
-    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
-    operandIdxes[name + "_dilationX"] = opIdx;
-    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &dilationX, sizeof(dilationX)) );
-    parameterIdxes.push_back(opIdx);
-    ++opIdx;
-
-    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
-    operandIdxes[name + "_dilationY"] = opIdx;
-    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &dilationY, sizeof(dilationY)) );
-    parameterIdxes.push_back(opIdx);
-    ++opIdx;
-#endif
-
-
     const auto inDims = shapeIdxes.at(input);
     const auto wDims = shapeIdxes.at(weight);
+    if (isDepthWise)
+    {
+        assert(inDims[3] == wDims[0]);
+    }
     const uint32_t outN = inDims[0];
-    const uint32_t outH = (inDims[1] - ((wDims[1] - 1) * dilationY + 1) + padTop + padBottom) / strideY + 1;
-    const uint32_t outW = (inDims[2] - ((wDims[2] - 1) * dilationX + 1) + padLeft + padRight) / strideX + 1;
+    const uint32_t outH = (inDims[1] - wDims[1] + padTop + padBottom) / strideY + 1;
+    const uint32_t outW = (inDims[2] - wDims[2] + padLeft + padRight) / strideX + 1;
     const uint32_t outC = wDims[0];
     std::vector<uint32_t> outDims = {outN, outH, outW, outC};
 
@@ -250,8 +241,19 @@ void ModelBuilder::conv2d (std::string name,
 
     outIdxes.push_back(opIdx);
     ++opIdx;
-    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperation(model, ANEURALNETWORKS_CONV_2D, parameterIdxes.size(), &parameterIdxes[0], outIdxes.size(), &outIdxes[0]) );
+
+    if (isDepthWise)
+    {
+        CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperation(model, ANEURALNETWORKS_DEPTHWISE_CONV_2D, parameterIdxes.size(), &parameterIdxes[0], outIdxes.size(), &outIdxes[0]) );
+    }
+    else
+    {
+        CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperation(model, ANEURALNETWORKS_CONV_2D, parameterIdxes.size(), &parameterIdxes[0], outIdxes.size(), &outIdxes[0]) );
+    }
+
 }
+
+
 
 void ModelBuilder::setInputOps (std::string name, void* dataptr, int32_t opType)
 {
@@ -292,13 +294,13 @@ void ModelBuilder::compile (int32_t dIdx)
     {
         // TODO: Here use only one device :)
         ANeuralNetworksDevice *devicePtr = devices[dIdx];
-        bool supportedOps[10];
-        for (int i = 0; i < 10; ++i)
+        bool supportedOps[20];
+        for (int i = 0; i < 20; ++i)
         {
             supportedOps[i] = false;
         }
         CHECK_NNAPI_ERROR( ANeuralNetworksModel_getSupportedOperationsForDevices(model, &devicePtr, 1, supportedOps) );
-        for (int i = 0; i < 10; ++i)
+        for (int i = 0; i < 20; ++i)
         {
             SLOG_WARN << supportedOps[i] << std::endl;
         }
