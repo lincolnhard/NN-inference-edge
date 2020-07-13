@@ -42,17 +42,22 @@ public:
     void addTensor (std::string name, std::vector<uint32_t> dims, int32_t opType,
                     const void *srcbuffer = nullptr, float scale = 0.1f, int32_t zeroPoint = 0);
 
-    void conv2d (std::string name, const std::string &input, const std::string &weight,
-                const std::string &bias, int32_t opType, int32_t padLeft, int32_t padRight,
+    void conv2d (const std::string& name, const std::string& input, const std::string& weight,
+                const std::string& bias, int32_t opType, int32_t padLeft, int32_t padRight,
                 int32_t padTop, int32_t padBottom, int32_t strideX, int32_t strideY,
-                bool isDepthWise, FuseCode fusecode, const std::string &output,
+                bool isDepthWise, FuseCode fusecode, const std::string& output,
                 float scaleOutOp = 0.1f, int32_t zeroPointOutOp = 0);
+
+    void eltwiseAdd (const std::string& name, const std::string& input1, const std::string& input2,
+                    FuseCode fusecode, const std::string& output, int32_t opType,
+                    float scale = 0.1f, int32_t zeroPoint = 0);
 
     void setInputOps (std::string name, void* dataptr, int32_t opType);
     void setOutputOps (std::string name, int32_t opType);
     void compile(int32_t deviceIndex = -1);
     void execute(void);
     std::vector<void *> getOutput(void);
+
 private:
     uint32_t opIdx;
     std::map<std::string, uint32_t> operandIdxes;

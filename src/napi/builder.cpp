@@ -129,10 +129,10 @@ void ModelBuilder::addTensor (std::string name,
     ++opIdx;
 }
 
-void ModelBuilder::conv2d (std::string name,
-                        const std::string &input,
-                        const std::string &weight,
-                        const std::string &bias,
+void ModelBuilder::conv2d (const std::string& name,
+                        const std::string& input,
+                        const std::string& weight,
+                        const std::string& bias,
                         int32_t opType,
                         int32_t padLeft,
                         int32_t padRight,
@@ -142,7 +142,7 @@ void ModelBuilder::conv2d (std::string name,
                         int32_t strideY,
                         bool isDepthWise,
                         FuseCode fusecode,
-                        const std::string &output,
+                        const std::string& output,
                         float scaleOutOp,
                         int32_t zeroPointOutOp
                         )
@@ -254,6 +254,65 @@ void ModelBuilder::conv2d (std::string name,
 }
 
 
+void ModelBuilder::eltwiseAdd (const std::string& name,
+                            const std::string& input1,
+                            const std::string& input2,
+                            FuseCode fusecode,
+                            const std::string& output,
+                            int32_t opType,
+                            float scale,
+                            int32_t zeroPoint
+                            )
+{
+    std::vector<uint32_t> parameterIdxes;
+
+    const auto input1Idx = operandIdxes.at(input1);
+    const auto input2Idx = operandIdxes.at(input2);
+    parameterIdxes.push_back(input1Idx);
+    parameterIdxes.push_back(input2Idx);
+
+    ANeuralNetworksOperandType operandType;
+    operandType.type = ANEURALNETWORKS_INT32;
+    operandType.dimensionCount = 0;
+    operandType.dimensions = nullptr;
+    operandType.scale = 0.0f;
+    operandType.zeroPoint = 0;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+    operandIdxes[name + "_activation"] = opIdx;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &fusecode, sizeof(fusecode)) );
+    parameterIdxes.push_back(opIdx);
+    ++opIdx;
+
+    const auto in1Dims = shapeIdxes.at(input1);
+    const auto in2Dims = shapeIdxes.at(input2);
+    for (size_t i = 0; i < in1Dims.size(); ++i)
+    {
+        assert(in1Dims[i] == in2Dims[i]); // TODO: Only support exact shape now
+    }
+    const uint32_t outN = in1Dims[0];
+    const uint32_t outH = in1Dims[1];
+    const uint32_t outW = in1Dims[2];
+    const uint32_t outC = in1Dims[3];
+    std::vector<uint32_t> outDims = {outN, outH, outW, outC};
+
+    std::vector<uint32_t> outIdxes;
+    operandType.type = opType;
+    operandType.dimensionCount = static_cast<uint32_t>(in1Dims.size());
+    operandType.dimensions = outDims.data();
+    operandType.scale = scale;
+    operandType.zeroPoint = zeroPoint;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+
+    operandIdxes[output] = opIdx;
+    shapeIdxes[output] = {outN, outH, outW, outC};
+
+    outIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperation(model, ANEURALNETWORKS_ADD, parameterIdxes.size(), &parameterIdxes[0], outIdxes.size(), &outIdxes[0]) );
+
+}
+
 
 void ModelBuilder::setInputOps (std::string name, void* dataptr, int32_t opType)
 {
@@ -294,13 +353,13 @@ void ModelBuilder::compile (int32_t dIdx)
     {
         // TODO: Here use only one device :)
         ANeuralNetworksDevice *devicePtr = devices[dIdx];
-        bool supportedOps[20];
-        for (int i = 0; i < 20; ++i)
+        bool supportedOps[100];
+        for (int i = 0; i < 100; ++i)
         {
             supportedOps[i] = false;
         }
         CHECK_NNAPI_ERROR( ANeuralNetworksModel_getSupportedOperationsForDevices(model, &devicePtr, 1, supportedOps) );
-        for (int i = 0; i < 20; ++i)
+        for (int i = 0; i < 100; ++i)
         {
             SLOG_WARN << supportedOps[i] << std::endl;
         }
