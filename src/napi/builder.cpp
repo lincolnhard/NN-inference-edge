@@ -91,8 +91,6 @@ ModelBuilder::~ModelBuilder()
         ANeuralNetworksMemory_free(it.nnMemPtr);
         close(it.fd);
     }
-    ANeuralNetworksEvent_free(event);
-    ANeuralNetworksExecution_free(execution);
     ANeuralNetworksCompilation_free(compilation);
     ANeuralNetworksModel_free(model);
 }
@@ -143,8 +141,8 @@ void ModelBuilder::conv2d (const std::string& name,
                         bool isDepthWise,
                         FuseCode fusecode,
                         const std::string& output,
-                        float scaleOutOp,
-                        int32_t zeroPointOutOp
+                        float scale,
+                        int32_t zeroPoint
                         )
 {
     std::vector<uint32_t> parameterIdxes;
@@ -218,26 +216,29 @@ void ModelBuilder::conv2d (const std::string& name,
 
     const auto inDims = shapeIdxes.at(input);
     const auto wDims = shapeIdxes.at(weight);
-    if (isDepthWise)
-    {
-        assert(inDims[3] == wDims[0]);
-    }
     const uint32_t outN = inDims[0];
     const uint32_t outH = (inDims[1] - wDims[1] + padTop + padBottom) / strideY + 1;
     const uint32_t outW = (inDims[2] - wDims[2] + padLeft + padRight) / strideX + 1;
-    const uint32_t outC = wDims[0];
+    uint32_t outC = wDims[0];
+
+    if (isDepthWise)
+    {
+        assert(inDims[3] == wDims[3]); // TODO: Support only for depth_multiplier == 1 now
+        outC = wDims[3];
+    }
+
     std::vector<uint32_t> outDims = {outN, outH, outW, outC};
 
     std::vector<uint32_t> outIdxes;
     operandType.type = opType;
     operandType.dimensionCount = static_cast<uint32_t>(inDims.size());
     operandType.dimensions = outDims.data();
-    operandType.scale = scaleOutOp;
-    operandType.zeroPoint = zeroPointOutOp;
+    operandType.scale = scale;
+    operandType.zeroPoint = zeroPoint;
     CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
 
     operandIdxes[output] = opIdx;
-    shapeIdxes[output] = {outN, outH, outW, outC};
+    shapeIdxes[output] = outDims;
 
     outIdxes.push_back(opIdx);
     ++opIdx;
@@ -304,7 +305,7 @@ void ModelBuilder::eltwiseAdd (const std::string& name,
     CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
 
     operandIdxes[output] = opIdx;
-    shapeIdxes[output] = {outN, outH, outW, outC};
+    shapeIdxes[output] = outDims;
 
     outIdxes.push_back(opIdx);
     ++opIdx;
@@ -353,13 +354,13 @@ void ModelBuilder::compile (int32_t dIdx)
     {
         // TODO: Here use only one device :)
         ANeuralNetworksDevice *devicePtr = devices[dIdx];
-        bool supportedOps[100];
-        for (int i = 0; i < 100; ++i)
+        bool supportedOps[20];
+        for (int i = 0; i < 20; ++i)
         {
             supportedOps[i] = false;
         }
         CHECK_NNAPI_ERROR( ANeuralNetworksModel_getSupportedOperationsForDevices(model, &devicePtr, 1, supportedOps) );
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < 20; ++i)
         {
             SLOG_WARN << supportedOps[i] << std::endl;
         }
@@ -372,6 +373,10 @@ void ModelBuilder::compile (int32_t dIdx)
     }
     CHECK_NNAPI_ERROR( ANeuralNetworksCompilation_setPreference(compilation, ANEURALNETWORKS_PREFER_FAST_SINGLE_ANSWER) );
     CHECK_NNAPI_ERROR( ANeuralNetworksCompilation_finish(compilation) );
+}
+
+void ModelBuilder::execute (void)
+{
     // Multiple concurrent execution instances could be created from the same compiled model.
     CHECK_NNAPI_ERROR( ANeuralNetworksExecution_create(compilation, &execution) );
     // Associate to the model inputs. Note that the index here uses the operand of the model input list, not all operand list
@@ -385,16 +390,14 @@ void ModelBuilder::compile (int32_t dIdx)
     {
         CHECK_NNAPI_ERROR( ANeuralNetworksExecution_setOutputFromMemory(execution, static_cast<int32_t>(i), nullptr, outputOps[i].nnMemPtr, 0, outputOps[i].sizeBytes) );
     }
-}
-
-void ModelBuilder::execute (void)
-{
-    // Start the execution of the model.
     // Note that the execution here is asynchronous, event will be created to monitor the status of the execution.
     CHECK_NNAPI_ERROR( ANeuralNetworksExecution_startCompute(execution, &event) );
     // Wait until the completion of the execution. This could be done on a different thread.
     // By waiting immediately, we effectively make this a synchronous call.
     CHECK_NNAPI_ERROR( ANeuralNetworksEvent_wait(event) );
+
+    ANeuralNetworksEvent_free(event);
+    ANeuralNetworksExecution_free(execution);
 }
 
 std::vector<void *> ModelBuilder::getOutput(void)

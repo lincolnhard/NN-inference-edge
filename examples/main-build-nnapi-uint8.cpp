@@ -12,8 +12,23 @@
 
 static auto LOG = spdlog::stdout_color_mt("MAIN");
 
-int main()
+int main(int ac, char *av[])
 {
+    int32_t deviceIndex = -1;
+    if (ac == 1)
+    {
+        deviceIndex = -1;
+    }
+    else if (ac == 2)
+    {
+        deviceIndex = std::stoi(std::string(av[1]));
+    }
+    else
+    {
+        SLOG_ERROR << "Usage: " << av[0] << " [device ID] (0: GPU, 1: APU, 2: CPU, -1: Auto-select)" << std::endl;
+        return 1;
+    }
+
     gallopwave::ModelBuilder builder;
 
     builder.getSdkVersion();
@@ -47,8 +62,8 @@ int main()
     builder.addTensor("conv1_bias", {32}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv1", "data", "conv1_weight", "conv1_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 2, 2, false, ANEURALNETWORKS_FUSED_RELU6, "conv1_out");
-
-    builder.addTensor("conv2_weight", {32, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+#if 0
+    builder.addTensor("conv2_weight", {1, 3, 3, 32}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv2_bias", {32}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv2", "conv1_out", "conv2_weight", "conv2_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv2_out");
@@ -63,7 +78,7 @@ int main()
     builder.conv2d("conv4", "conv3_out", "conv4_weight", "conv4_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv4_out");
 
-    builder.addTensor("conv5_weight", {96, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv5_weight", {1, 3, 3, 96}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv5_bias", {96}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv5", "conv4_out", "conv5_weight", "conv5_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 2, 2, true, ANEURALNETWORKS_FUSED_RELU6, "conv5_out");
@@ -78,7 +93,7 @@ int main()
     builder.conv2d("conv7", "conv6_out", "conv7_weight", "conv7_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv7_out");
 
-    builder.addTensor("conv8_weight", {144, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv8_weight", {1, 3, 3, 144}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv8_bias", {144}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv8", "conv7_out", "conv8_weight", "conv8_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv8_out");
@@ -96,7 +111,7 @@ int main()
     builder.conv2d("conv10", "add9_out", "conv10_weight", "conv10_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv10_out");
 
-    builder.addTensor("conv11_weight", {144, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv11_weight", {1, 3, 3, 144}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv11_bias", {144}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv11", "conv10_out", "conv11_weight", "conv11_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 2, 2, true, ANEURALNETWORKS_FUSED_RELU6, "conv11_out");
@@ -111,7 +126,7 @@ int main()
     builder.conv2d("conv13", "conv12_out", "conv13_weight", "conv13_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv13_out");
 
-    builder.addTensor("conv14_weight", {192, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv14_weight", {1, 3, 3, 192}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv14_bias", {192}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv14", "conv13_out", "conv14_weight", "conv14_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv14_out");
@@ -129,7 +144,7 @@ int main()
     builder.conv2d("conv16", "add15_out", "conv16_weight", "conv16_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv16_out");
 
-    builder.addTensor("conv17_weight", {192, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv17_weight", {1, 3, 3, 192}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv17_bias", {192}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv17", "conv16_out", "conv17_weight", "conv17_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv17_out");
@@ -147,7 +162,7 @@ int main()
     builder.conv2d("conv19", "add18_out", "conv19_weight", "conv19_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv19_out");
 
-    builder.addTensor("conv20_weight", {192, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv20_weight", {1, 3, 3, 192}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv20_bias", {192}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv20", "conv19_out", "conv20_weight", "conv20_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 2, 2, true, ANEURALNETWORKS_FUSED_RELU6, "conv20_out");
@@ -162,7 +177,7 @@ int main()
     builder.conv2d("conv22", "conv21_out", "conv22_weight", "conv22_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv22_out");
 
-    builder.addTensor("conv23_weight", {384, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv23_weight", {1, 3, 3, 384}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv23_bias", {384}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv23", "conv22_out", "conv23_weight", "conv23_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv23_out");
@@ -180,7 +195,7 @@ int main()
     builder.conv2d("conv25", "add24_out", "conv25_weight", "conv25_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv25_out");
 
-    builder.addTensor("conv26_weight", {384, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv26_weight", {1, 3, 3, 384}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv26_bias", {384}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv26", "conv25_out", "conv26_weight", "conv26_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv26_out");
@@ -198,7 +213,7 @@ int main()
     builder.conv2d("conv28", "add27_out", "conv28_weight", "conv28_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv28_out");
 
-    builder.addTensor("conv29_weight", {384, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv29_weight", {1, 3, 3, 384}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv29_bias", {384}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv29", "conv28_out", "conv29_weight", "conv29_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv29_out");
@@ -216,7 +231,7 @@ int main()
     builder.conv2d("conv31", "add30_out", "conv31_weight", "conv31_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv31_out");
 
-    builder.addTensor("conv32_weight", {384, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv32_weight", {1, 3, 3, 384}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv32_bias", {384}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv32", "conv31_out", "conv32_weight", "conv32_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv32_out");
@@ -231,7 +246,7 @@ int main()
     builder.conv2d("conv34", "conv33_out", "conv34_weight", "conv34_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv34_out");
 
-    builder.addTensor("conv35_weight", {576, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv35_weight", {1, 3, 3, 576}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv35_bias", {576}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv35", "conv34_out", "conv35_weight", "conv35_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv35_out");
@@ -249,7 +264,7 @@ int main()
     builder.conv2d("conv37", "add36_out", "conv37_weight", "conv37_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv37_out");
 
-    builder.addTensor("conv38_weight", {576, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv38_weight", {1, 3, 3, 576}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv38_bias", {576}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv38", "conv37_out", "conv38_weight", "conv38_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv38_out");
@@ -272,7 +287,7 @@ int main()
     builder.conv2d("conv40", "add39_out", "conv40_weight", "conv40_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv40_out");
 
-    builder.addTensor("conv41_weight", {576, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv41_weight", {1, 3, 3, 576}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv41_bias", {576}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv41", "conv40_out", "conv41_weight", "conv41_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv41_out");
@@ -287,7 +302,7 @@ int main()
     builder.conv2d("conv43", "conv42_out", "conv43_weight", "conv43_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv43_out");
 
-    builder.addTensor("conv44_weight", {960, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv44_weight", {1, 3, 3, 960}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv44_bias", {960}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv44", "conv43_out", "conv44_weight", "conv44_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv44_out");
@@ -305,7 +320,7 @@ int main()
     builder.conv2d("conv46", "add45_out", "conv46_weight", "conv46_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv46_out");
 
-    builder.addTensor("conv47_weight", {960, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv47_weight", {1, 3, 3, 960}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv47_bias", {960}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv47", "conv46_out", "conv47_weight", "conv47_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv47_out");
@@ -323,7 +338,7 @@ int main()
     builder.conv2d("conv49", "add48_out", "conv49_weight", "conv49_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv49_out");
 
-    builder.addTensor("conv50_weight", {960, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv50_weight", {1, 3, 3, 960}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv50_bias", {960}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv50", "conv49_out", "conv50_weight", "conv50_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv50_out");
@@ -348,7 +363,7 @@ int main()
     builder.conv2d("conv53", "conv52_out", "conv53_weight", "conv53_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv53_out");
 
-    builder.addTensor("conv54_weight", {256, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv54_weight", {1, 3, 3, 256}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv54_bias", {256}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv54", "conv53_out", "conv54_weight", "conv54_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, true, ANEURALNETWORKS_FUSED_RELU6, "conv54_out");
@@ -368,7 +383,7 @@ int main()
     builder.conv2d("conv56", "conv55_out", "conv56_weight", "conv56_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv56_out");
 
-    builder.addTensor("conv57_weight", {128, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv57_weight", {1, 3, 3, 128}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv57_bias", {128}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv57", "conv56_out", "conv57_weight", "conv57_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 2, 2, true, ANEURALNETWORKS_FUSED_RELU6, "conv57_out");
@@ -389,7 +404,7 @@ int main()
     builder.conv2d("conv59", "conv58_out", "conv59_weight", "conv59_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv59_out");
 
-    builder.addTensor("conv60_weight", {128, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv60_weight", {1, 3, 3, 128}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv60_bias", {128}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv60", "conv59_out", "conv60_weight", "conv60_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 2, 2, true, ANEURALNETWORKS_FUSED_RELU6, "conv60_out");
@@ -409,7 +424,7 @@ int main()
     builder.conv2d("conv62", "conv61_out", "conv62_weight", "conv62_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_RELU6, "conv62_out");
 
-    builder.addTensor("conv63_weight", {64, 3, 3, 1}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
+    builder.addTensor("conv63_weight", {1, 3, 3, 64}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv63_bias", {64}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv63", "conv62_out", "conv63_weight", "conv63_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 2, 2, true, ANEURALNETWORKS_FUSED_RELU6, "conv63_out");
@@ -485,47 +500,45 @@ int main()
     builder.conv2d("conv76", "conv64_out", "conv76_weight", "conv76_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv76_out");
 
-
+#endif
 
 
 
     // set input/output
     builder.setInputOps("data", indataptr, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv65_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv66_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv67_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv68_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv69_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv70_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv71_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv72_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv73_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv74_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv75_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv76_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    // builder.setOutputOps("conv65_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    // builder.setOutputOps("conv66_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    // builder.setOutputOps("conv67_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    // builder.setOutputOps("conv68_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    // builder.setOutputOps("conv69_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    // builder.setOutputOps("conv70_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    // builder.setOutputOps("conv71_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    // builder.setOutputOps("conv72_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    // builder.setOutputOps("conv73_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    // builder.setOutputOps("conv74_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    // builder.setOutputOps("conv75_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    // builder.setOutputOps("conv76_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv1_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+
+
+
 
     // compile
-    builder.compile(1);
+    builder.compile(deviceIndex);
 
     // execute
-    // double timesum = 0.0;
-    // const int EVALUATE_TIMES = 1;
-    // for (int t = 0; t < EVALUATE_TIMES; ++t)
-    // {
-    //     std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
-
+    double timesum = 0.0;
+    const int EVALUATE_TIMES = 100;
+    for (int t = 0; t < EVALUATE_TIMES; ++t)
+    {
+        std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
 
         builder.execute();
-        SLOG_INFO << "First time" << std::endl;
-        // builder.setInputOps("data", indataptr, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-        builder.onemoretime();
-        builder.execute();
-        // builder.onemoretime();
 
-    //     std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
-    //     timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
-    // }
-    // SLOG_INFO << "FPS: " << 1.0 / (timesum / EVALUATE_TIMES / 1000.0) << std::endl;
+        std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
+        timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
+    }
+    SLOG_INFO << "FPS: " << 1.0 / (timesum / EVALUATE_TIMES / 1000.0) << std::endl;
 
 
 

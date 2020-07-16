@@ -46,7 +46,7 @@ public:
                 const std::string& bias, int32_t opType, int32_t padLeft, int32_t padRight,
                 int32_t padTop, int32_t padBottom, int32_t strideX, int32_t strideY,
                 bool isDepthWise, FuseCode fusecode, const std::string& output,
-                float scaleOutOp = 0.1f, int32_t zeroPointOutOp = 0);
+                float scale = 0.1f, int32_t zeroPoint = 0);
 
     void eltwiseAdd (const std::string& name, const std::string& input1, const std::string& input2,
                     FuseCode fusecode, const std::string& output, int32_t opType,

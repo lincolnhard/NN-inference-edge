@@ -3,7 +3,8 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := aurora-android
-LOCAL_SRC_FILES := examples/main-build-nnapi-quant.cpp
+LOCAL_SRC_FILES := examples/main-build-nnapi-fp32.cpp
+# LOCAL_SRC_FILES := examples/main-build-nnapi-uint8.cpp
 LOCAL_SRC_FILES += $(addprefix src/, $(notdir $(wildcard $(LOCAL_PATH)/src/*.cpp)))
 LOCAL_SRC_FILES += $(addprefix src/napi/, $(notdir $(wildcard $(LOCAL_PATH)/src/napi/*.cpp)))
 # $(error Debug usage: $(LOCAL_SRC_FILES))
