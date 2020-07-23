@@ -62,7 +62,7 @@ int main(int ac, char *av[])
     builder.addTensor("conv1_bias", {32}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv1", "data", "conv1_weight", "conv1_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 2, 2, false, ANEURALNETWORKS_FUSED_RELU6, "conv1_out");
-#if 0
+
     builder.addTensor("conv2_weight", {1, 3, 3, 32}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv2_bias", {32}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
     builder.conv2d("conv2", "conv1_out", "conv2_weight", "conv2_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
@@ -500,26 +500,24 @@ int main(int ac, char *av[])
     builder.conv2d("conv76", "conv64_out", "conv76_weight", "conv76_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     1, 1, 1, 1, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv76_out");
 
-#endif
+
 
 
 
     // set input/output
     builder.setInputOps("data", indataptr, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    // builder.setOutputOps("conv65_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    // builder.setOutputOps("conv66_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    // builder.setOutputOps("conv67_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    // builder.setOutputOps("conv68_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    // builder.setOutputOps("conv69_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    // builder.setOutputOps("conv70_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    // builder.setOutputOps("conv71_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    // builder.setOutputOps("conv72_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    // builder.setOutputOps("conv73_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    // builder.setOutputOps("conv74_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    // builder.setOutputOps("conv75_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    // builder.setOutputOps("conv76_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv1_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-
+    builder.setOutputOps("conv65_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv66_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv67_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv68_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv69_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv70_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv71_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv72_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv73_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv74_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv75_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputOps("conv76_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
 
 
 
@@ -543,13 +541,13 @@ int main(int ac, char *av[])
 
 
     // validate
-    std::vector<void *> results = builder.getOutput();
+    // std::vector<void *> results = builder.getOutput();
 
-    for (int32_t idx = 0; idx < 10; ++idx)
-    {
-        uint8_t *result0 = reinterpret_cast<uint8_t *>(results[0]);
-        SLOG_INFO << (int)(result0[idx]) << std::endl;
-    }
+    // for (int32_t idx = 0; idx < 10; ++idx)
+    // {
+    //     uint8_t *result0 = reinterpret_cast<uint8_t *>(results[0]);
+    //     SLOG_INFO << (int)(result0[idx]) << std::endl;
+    // }
 
 
     delete [] indataptr;
