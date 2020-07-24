@@ -12,27 +12,29 @@
 
 static auto LOG = spdlog::stdout_color_mt("MAIN");
 
-int main(int ac, char *av[])
+// int main(int ac, char *av[])
+double runapu()
 {
-    int32_t deviceIndex = -1;
-    if (ac == 1)
-    {
-        deviceIndex = -1;
-    }
-    else if (ac == 2)
-    {
-        deviceIndex = std::stoi(std::string(av[1]));
-    }
-    else
-    {
-        SLOG_ERROR << "Usage: " << av[0] << " [device ID] (0: GPU, 1: APU, 2: CPU, -1: Auto-select)" << std::endl;
-        return 1;
-    }
+    // int32_t deviceIndex = -1;
+    // if (ac == 1)
+    // {
+    //     deviceIndex = -1;
+    // }
+    // else if (ac == 2)
+    // {
+    //     deviceIndex = std::stoi(std::string(av[1]));
+    // }
+    // else
+    // {
+    //     SLOG_ERROR << "Usage: " << av[0] << " [device ID] (0: GPU, 1: APU, 2: CPU, -1: Auto-select)" << std::endl;
+    //     return 1;
+    // }
+    int32_t deviceIndex = 1;
 
     gallopwave::ModelBuilder builder;
 
-    builder.getSdkVersion();
-    builder.getDevices();
+    // builder.getSdkVersion();
+    // builder.getDevices();
 
     // NNAPI default data layout NHWC
     const uint32_t NET_WIDTH = 512;
@@ -505,19 +507,19 @@ int main(int ac, char *av[])
 
 
     // set input/output
-    builder.setInputOps("data", indataptr, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv65_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv66_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv67_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv68_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv69_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv70_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv71_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv72_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv73_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv74_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv75_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputOps("conv76_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setInputTensors("data", indataptr, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("conv65_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("conv66_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("conv67_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("conv68_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("conv69_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("conv70_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("conv71_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("conv72_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("conv73_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("conv74_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("conv75_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("conv76_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
 
 
 
@@ -536,7 +538,8 @@ int main(int ac, char *av[])
         std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
         timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
     }
-    SLOG_INFO << "FPS: " << 1.0 / (timesum / EVALUATE_TIMES / 1000.0) << std::endl;
+    double fps = 1.0 / (timesum / EVALUATE_TIMES / 1000.0);
+    SLOG_INFO << "FPS: " << fps << std::endl;
 
 
 
@@ -555,5 +558,6 @@ int main(int ac, char *av[])
     delete [] biasptr;
 
     SLOG_INFO << "fine" << std::endl;
-    return 0;
+    // return 0;
+    return fps;
 }

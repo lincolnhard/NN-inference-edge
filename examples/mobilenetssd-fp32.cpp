@@ -504,20 +504,20 @@ int main(int ac, char *av[])
 
 
     // set input/output
-    builder.setInputOps("data", indataptr, ANEURALNETWORKS_TENSOR_FLOAT32);
-    // builder.setOutputOps("conv65_out", ANEURALNETWORKS_TENSOR_FLOAT32);
-    // builder.setOutputOps("conv66_out", ANEURALNETWORKS_TENSOR_FLOAT32);
-    // builder.setOutputOps("conv67_out", ANEURALNETWORKS_TENSOR_FLOAT32);
-    // builder.setOutputOps("conv68_out", ANEURALNETWORKS_TENSOR_FLOAT32);
-    // builder.setOutputOps("conv69_out", ANEURALNETWORKS_TENSOR_FLOAT32);
-    // builder.setOutputOps("conv70_out", ANEURALNETWORKS_TENSOR_FLOAT32);
-    // builder.setOutputOps("conv71_out", ANEURALNETWORKS_TENSOR_FLOAT32);
-    // builder.setOutputOps("conv72_out", ANEURALNETWORKS_TENSOR_FLOAT32);
-    // builder.setOutputOps("conv73_out", ANEURALNETWORKS_TENSOR_FLOAT32);
-    // builder.setOutputOps("conv74_out", ANEURALNETWORKS_TENSOR_FLOAT32);
-    // builder.setOutputOps("conv75_out", ANEURALNETWORKS_TENSOR_FLOAT32);
-    // builder.setOutputOps("conv76_out", ANEURALNETWORKS_TENSOR_FLOAT32);
-    builder.setOutputOps("conv64_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    builder.setInputTensors("data", indataptr, ANEURALNETWORKS_TENSOR_FLOAT32);
+    // builder.setOutputTensors("conv65_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    // builder.setOutputTensors("conv66_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    // builder.setOutputTensors("conv67_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    // builder.setOutputTensors("conv68_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    // builder.setOutputTensors("conv69_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    // builder.setOutputTensors("conv70_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    // builder.setOutputTensors("conv71_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    // builder.setOutputTensors("conv72_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    // builder.setOutputTensors("conv73_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    // builder.setOutputTensors("conv74_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    // builder.setOutputTensors("conv75_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    // builder.setOutputTensors("conv76_out", ANEURALNETWORKS_TENSOR_FLOAT32);
+    builder.setOutputTensors("conv64_out", ANEURALNETWORKS_TENSOR_FLOAT32);
 
     // compile
     builder.compile(deviceIndex);

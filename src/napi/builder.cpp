@@ -85,7 +85,7 @@ size_t ModelBuilder::getElementSize(int32_t opType)
 
 ModelBuilder::~ModelBuilder()
 {
-    for (auto it: outputOps)
+    for (auto it: outputTensors)
     {
         munmap(it.data, it.sizeBytes);
         ANeuralNetworksMemory_free(it.nnMemPtr);
@@ -255,12 +255,13 @@ void ModelBuilder::conv2d (const std::string& name,
 }
 
 
-void ModelBuilder::eltwiseAdd (const std::string& name,
+void ModelBuilder::eltwise (const std::string& name,
                             const std::string& input1,
                             const std::string& input2,
                             FuseCode fusecode,
                             const std::string& output,
                             int32_t opType,
+                            EltwiseCode eltwisecode,
                             float scale,
                             int32_t zeroPoint
                             )
@@ -286,14 +287,10 @@ void ModelBuilder::eltwiseAdd (const std::string& name,
 
     const auto in1Dims = shapeIdxes.at(input1);
     const auto in2Dims = shapeIdxes.at(input2);
-    for (size_t i = 0; i < in1Dims.size(); ++i)
-    {
-        assert(in1Dims[i] == in2Dims[i]); // TODO: Only support exact shape now
-    }
-    const uint32_t outN = in1Dims[0];
-    const uint32_t outH = in1Dims[1];
-    const uint32_t outW = in1Dims[2];
-    const uint32_t outC = in1Dims[3];
+    const uint32_t outN = (in1Dims[0] > in2Dims[0] ? in1Dims[0] : in2Dims[0]);
+    const uint32_t outH = (in1Dims[1] > in2Dims[1] ? in1Dims[1] : in2Dims[1]);
+    const uint32_t outW = (in1Dims[2] > in2Dims[2] ? in1Dims[2] : in2Dims[2]);
+    const uint32_t outC = (in1Dims[3] > in2Dims[3] ? in1Dims[3] : in2Dims[3]);
     std::vector<uint32_t> outDims = {outN, outH, outW, outC};
 
     std::vector<uint32_t> outIdxes;
@@ -310,20 +307,27 @@ void ModelBuilder::eltwiseAdd (const std::string& name,
     outIdxes.push_back(opIdx);
     ++opIdx;
 
-    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperation(model, ANEURALNETWORKS_ADD, parameterIdxes.size(), &parameterIdxes[0], outIdxes.size(), &outIdxes[0]) );
+    if (eltwisecode == ELTWISE_ADDITION)
+    {
+        CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperation(model, ANEURALNETWORKS_ADD, parameterIdxes.size(), &parameterIdxes[0], outIdxes.size(), &outIdxes[0]) );
+    }
+    else if (eltwisecode == ELTWISE_MULTIPLY)
+    {
+        CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperation(model, ANEURALNETWORKS_MUL, parameterIdxes.size(), &parameterIdxes[0], outIdxes.size(), &outIdxes[0]) );
+    }
 
 }
 
 
-void ModelBuilder::setInputOps (std::string name, void* dataptr, int32_t opType)
+void ModelBuilder::setInputTensors (std::string name, void* dataptr, int32_t opType)
 {
     uint32_t idx = operandIdxes.at(name);
     std::vector<uint32_t> shape = shapeIdxes.at(name);
     uint32_t sizebyte = getElementSize(opType) * std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint32_t>());
-    inputOps.push_back({idx, shape, sizebyte, name, dataptr});
+    inputTensors.push_back({idx, shape, sizebyte, name, dataptr});
 }
 
-void ModelBuilder::setOutputOps (std::string name, int32_t opType)
+void ModelBuilder::setOutputTensors (std::string name, int32_t opType)
 {
     uint32_t idx = operandIdxes.at(name);
     std::vector<uint32_t> shape = shapeIdxes.at(name);
@@ -332,18 +336,18 @@ void ModelBuilder::setOutputOps (std::string name, int32_t opType)
     ANeuralNetworksMemory *memptr = nullptr;
     CHECK_NNAPI_ERROR( ANeuralNetworksMemory_createFromFd(sizebyte, PROT_READ | PROT_WRITE, fd, 0, &memptr) );
     void* dataptr = mmap(nullptr, sizebyte, PROT_READ, MAP_SHARED, fd, 0);
-    outputOps.push_back({idx, shape, sizebyte, name, dataptr, fd, memptr});
+    outputTensors.push_back({idx, shape, sizebyte, name, dataptr, fd, memptr});
 }
 
 void ModelBuilder::compile (int32_t dIdx)
 {
     std::vector<uint32_t> inputIndices;
     std::vector<uint32_t> outputIndices;
-    for (auto it: inputOps)
+    for (auto it: inputTensors)
     {
         inputIndices.push_back(it.index);
     }
-    for (auto it: outputOps)
+    for (auto it: outputTensors)
     {
         outputIndices.push_back(it.index);
     }
@@ -380,15 +384,15 @@ void ModelBuilder::execute (void)
     // Multiple concurrent execution instances could be created from the same compiled model.
     CHECK_NNAPI_ERROR( ANeuralNetworksExecution_create(compilation, &execution) );
     // Associate to the model inputs. Note that the index here uses the operand of the model input list, not all operand list
-    for (size_t i = 0; i < inputOps.size(); ++i)
+    for (size_t i = 0; i < inputTensors.size(); ++i)
     {
-        CHECK_NNAPI_ERROR( ANeuralNetworksExecution_setInput(execution, static_cast<int32_t>(i), nullptr, inputOps[i].data, inputOps[i].sizeBytes) );
+        CHECK_NNAPI_ERROR( ANeuralNetworksExecution_setInput(execution, static_cast<int32_t>(i), nullptr, inputTensors[i].data, inputTensors[i].sizeBytes) );
     }
     // Set the output tensor that will be filled by executing the model. Shared memory here to minimize the copies needed for getting the output data.
     // Note that the index here uses the operand of the model output list, not all operand list
-    for (size_t i = 0; i < outputOps.size(); ++i)
+    for (size_t i = 0; i < outputTensors.size(); ++i)
     {
-        CHECK_NNAPI_ERROR( ANeuralNetworksExecution_setOutputFromMemory(execution, static_cast<int32_t>(i), nullptr, outputOps[i].nnMemPtr, 0, outputOps[i].sizeBytes) );
+        CHECK_NNAPI_ERROR( ANeuralNetworksExecution_setOutputFromMemory(execution, static_cast<int32_t>(i), nullptr, outputTensors[i].nnMemPtr, 0, outputTensors[i].sizeBytes) );
     }
     // Note that the execution here is asynchronous, event will be created to monitor the status of the execution.
     CHECK_NNAPI_ERROR( ANeuralNetworksExecution_startCompute(execution, &event) );
@@ -403,7 +407,7 @@ void ModelBuilder::execute (void)
 std::vector<void *> ModelBuilder::getOutput(void)
 {
     std::vector<void *> outputTensorPtrs;
-    for (auto it: outputOps)
+    for (auto it: outputTensors)
     {
         outputTensorPtrs.push_back(it.data);
     }
