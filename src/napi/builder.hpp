@@ -44,23 +44,31 @@ class ModelBuilder
 public:
     ModelBuilder(void);
     ~ModelBuilder(void);
-    void getSdkVersion (void);
-    void getDevices (void);
-    void addTensor (std::string name, std::vector<uint32_t> dims, int32_t opType,
-                    const void *srcbuffer = nullptr, float scale = 0.0f, int32_t zeroPoint = 0);
+    void getSdkVersion(void);
+    void getDevices(void);
+    void addTensor(std::string name, std::vector<uint32_t> dims, OperandCode operandcode,
+                    const void *srcbuffer = nullptr, float scale = 0.001f, int32_t zeroPoint = 0);
 
-    void conv2d (const std::string& name, const std::string& input, const std::string& weight,
-                const std::string& bias, int32_t opType, int32_t padLeft, int32_t padRight,
+    void conv2d(const std::string& name, const std::string& input, const std::string& weight,
+                const std::string& bias, OperandCode operandcode, int32_t padLeft, int32_t padRight,
                 int32_t padTop, int32_t padBottom, int32_t strideX, int32_t strideY,
                 bool isDepthWise, FuseCode fusecode, const std::string& output,
-                float scale = 0.0f, int32_t zeroPoint = 0);
+                float scale = 0.001f, int32_t zeroPoint = 0);
 
-    void eltwise (const std::string& name, const std::string& input1, const std::string& input2,
-                FuseCode fusecode, const std::string& output, int32_t opType, EltwiseCode eltwisecode,
-                float scale = 0.0f, int32_t zeroPoint = 0);
+    void eltwise(const std::string& name, const std::string& input1, const std::string& input2,
+                FuseCode fusecode, const std::string& output, OperandCode operandcode, EltwiseCode eltwisecode,
+                float scale = 0.001f, int32_t zeroPoint = 0);
+    
+    void maxpool(const std::string& name, const std::string& input, OperandCode operandcode,
+                int32_t padLeft, int32_t padRight, int32_t padTop, int32_t padBottom,
+                int32_t strideX, int32_t strideY, int32_t kernelW, int32_t kernelH,
+                FuseCode fusecode, const std::string& output, float scale = 0.001f, int32_t zeroPoint = 0);
+    
+    void reduce(const std::string& name, const std::string& input, OperandCode operandcode,
+                const std::string& output, float scale = 0.001f, int32_t zeroPoint = 0);
 
-    void setInputTensors (std::string name, void* dataptr, int32_t opType);
-    void setOutputTensors (std::string name, int32_t opType);
+    void setInputTensors (std::string name, void* dataptr, OperandCode operandcode);
+    void setOutputTensors (std::string name, OperandCode operandcode);
     void compile(int32_t deviceIndex = -1);
     void execute(void);
     std::vector<void *> getOutput(void);
@@ -78,7 +86,7 @@ private:
     ANeuralNetworksEvent *event;
     std::vector<ANeuralNetworksDevice *> devices;
 
-    size_t getElementSize(int32_t opType);
+    size_t getElementSize(OperandCode operandcode);
 };
 
 }

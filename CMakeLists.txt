@@ -18,7 +18,7 @@ include_directories(src
 )
 
 add_executable(${PROJECT_NAME}
-			examples/main-build-nnapi-uint8.cpp
+			examples/bisenet-uint8.cpp
 			src/napi/builder.cpp
 			src/log_stream.cpp
 )
