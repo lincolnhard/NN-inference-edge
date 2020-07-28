@@ -67,6 +67,14 @@ public:
     void reduce(const std::string& name, const std::string& input, OperandCode operandcode,
                 const std::string& output, float scale = 0.001f, int32_t zeroPoint = 0);
 
+    void sigmoid(const std::string& name, const std::string& input, OperandCode operandcode, const std::string& output);
+
+    void resize(const std::string& name, const std::string& input, int32_t outputW, int32_t outputH,
+                OperandCode operandcode, const std::string& output, float scale = 0.001f, int32_t zeroPoint = 0);
+    
+    void dequantize(const std::string& name, const std::string& input, OperandCode operandcode,
+                const std::string& output, float scale = 0.001f, int32_t zeroPoint = 0);
+
     void setInputTensors (std::string name, void* dataptr, OperandCode operandcode);
     void setOutputTensors (std::string name, OperandCode operandcode);
     void compile(int32_t deviceIndex = -1);

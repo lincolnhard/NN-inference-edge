@@ -638,6 +638,19 @@ int main(int ac, char *av[])
     builder.conv2d("conv105", "reduce104_out", "conv105_weight", "conv105_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv105_out");
 
+    builder.sigmoid("sigmoid105", "conv105_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, "sigmoid105_out");
+
+    builder.eltwise("mul105", "conv104_out", "sigmoid105_out", ANEURALNETWORKS_FUSED_NONE, "mul105_out",
+                    ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_MULTIPLY);
+    
+    builder.reduce("reduce106", "mul105_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, "reduce106_out");
+
+    builder.eltwise("add106", "mul105_out", "reduce106_out", ANEURALNETWORKS_FUSED_NONE, "add106_out",
+                    ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_ADDITION);
+
+    builder.dequantize("deq106", "add106_out", ANEURALNETWORKS_TENSOR_FLOAT32, "deq106_out");
+
+    builder.resize("resize106", "deq106_out", 64, 32, ANEURALNETWORKS_TENSOR_FLOAT32, "resize106_out");
 
 
 
@@ -645,18 +658,32 @@ int main(int ac, char *av[])
 
 
     builder.setInputTensors("data", indataptr, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("conv105_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("add106_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
 
     builder.compile(deviceIndex);
-    builder.execute();
 
-    std::vector<void *> results = builder.getOutput();
+    // execute
+    // double timesum = 0.0;
+    // const int EVALUATE_TIMES = 100;
+    // for (int t = 0; t < EVALUATE_TIMES; ++t)
+    // {
+    //     std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
 
-    for (int32_t idx = 0; idx < 60; ++idx)
-    {
-        uint8_t *result0 = reinterpret_cast<uint8_t *>(results[0]);
-        SLOG_INFO << (int)(result0[idx]) << std::endl;
-    }
+        builder.execute();
+
+    //     std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
+    //     timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
+    // }
+    // double fps = 1.0 / (timesum / EVALUATE_TIMES / 1000.0);
+    // SLOG_INFO << "FPS: " << fps << std::endl;
+
+    // std::vector<void *> results = builder.getOutput();
+
+    // for (int32_t idx = 0; idx < 60; ++idx)
+    // {
+    //     uint8_t *result0 = reinterpret_cast<uint8_t *>(results[0]);
+    //     SLOG_INFO << (int)(result0[idx]) << std::endl;
+    // }
 
 
 

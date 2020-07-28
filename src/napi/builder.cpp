@@ -469,7 +469,6 @@ void ModelBuilder::reduce(const std::string& name,
     const uint32_t outW = 1;
     const uint32_t outC = inDims[3];
     std::vector<uint32_t> outDims = {outN, outH, outW, outC};
-    // std::vector<uint32_t> outDims = {inDims[0], inDims[2], inDims[3]};
 
     std::vector<uint32_t> outIdxes;
     operandType.type = operandcode;
@@ -489,7 +488,143 @@ void ModelBuilder::reduce(const std::string& name,
 }
 
 
-void ModelBuilder::setInputTensors (std::string name, void* dataptr, OperandCode operandcode)
+void ModelBuilder::sigmoid(const std::string& name,
+                        const std::string& input,
+                        OperandCode operandcode,
+                        const std::string& output
+                        )
+{
+    std::vector<uint32_t> parameterIdxes;
+
+    const auto inputIdx = operandIdxes.at(input);
+    parameterIdxes.push_back(inputIdx);
+
+    const auto inDims = shapeIdxes.at(input);
+    const uint32_t outN = inDims[0];
+    const uint32_t outH = inDims[1];
+    const uint32_t outW = inDims[2];
+    const uint32_t outC = inDims[3];
+    std::vector<uint32_t> outDims = {outN, outH, outW, outC};
+
+    std::vector<uint32_t> outIdxes;
+    ANeuralNetworksOperandType operandType;
+    operandType.type = operandcode;
+    operandType.dimensionCount = static_cast<uint32_t>(outDims.size());
+    operandType.dimensions = outDims.data();
+    operandType.scale = 1.0f / 256;
+    operandType.zeroPoint = 0;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+
+    operandIdxes[output] = opIdx;
+    shapeIdxes[output] = outDims;
+    outIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperation(model, ANEURALNETWORKS_LOGISTIC, parameterIdxes.size(), &parameterIdxes[0], outIdxes.size(), &outIdxes[0]) );
+}
+
+
+void ModelBuilder::resize(const std::string& name,
+                        const std::string& input,
+                        int32_t outputW,
+                        int32_t outputH,
+                        OperandCode operandcode,
+                        const std::string& output,
+                        float scale,
+                        int32_t zeroPoint
+                        )
+{
+    std::vector<uint32_t> parameterIdxes;
+
+    const auto inputIdx = operandIdxes.at(input);
+    parameterIdxes.push_back(inputIdx);
+
+    ANeuralNetworksOperandType operandType;
+    operandType.type = ANEURALNETWORKS_INT32;
+    operandType.dimensionCount = 0;
+    operandType.dimensions = nullptr;
+    operandType.scale = 0.0f;
+    operandType.zeroPoint = 0;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType));
+    operandIdxes[name + "_outW"] = opIdx;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &outputW, sizeof(outputW)) );
+    parameterIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+    operandIdxes[name + "_outH"] = opIdx;
+    CHECK_NNAPI_ERROR ( ANeuralNetworksModel_setOperandValue(model, opIdx, &outputH, sizeof(outputH)) );
+    parameterIdxes.push_back(opIdx);
+    ++opIdx;
+
+
+    const auto inDims = shapeIdxes.at(input);
+    const uint32_t outN = inDims[0];
+    const uint32_t outH = outputW;
+    const uint32_t outW = outputH;
+    const uint32_t outC = inDims[3];
+    std::vector<uint32_t> outDims = {outN, outH, outW, outC};
+
+    std::vector<uint32_t> outIdxes;
+    operandType.type = operandcode;
+    operandType.dimensionCount = static_cast<uint32_t>(outDims.size());
+    operandType.dimensions = outDims.data();
+    operandType.scale = scale;
+    operandType.zeroPoint = zeroPoint;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+
+    operandIdxes[output] = opIdx;
+    shapeIdxes[output] = outDims;
+
+    outIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperation(model, ANEURALNETWORKS_RESIZE_BILINEAR, parameterIdxes.size(), &parameterIdxes[0], outIdxes.size(), &outIdxes[0]) );
+}
+
+
+void ModelBuilder::dequantize(const std::string& name,
+                        const std::string& input,
+                        OperandCode operandcode,
+                        const std::string& output,
+                        float scale,
+                        int32_t zeroPoint
+                        )
+{
+    std::vector<uint32_t> parameterIdxes;
+
+    const auto inputIdx = operandIdxes.at(input);
+    parameterIdxes.push_back(inputIdx);
+
+    const auto inDims = shapeIdxes.at(input);
+    const uint32_t outN = inDims[0];
+    const uint32_t outH = inDims[1];
+    const uint32_t outW = inDims[2];
+    const uint32_t outC = inDims[3];
+    std::vector<uint32_t> outDims = {outN, outH, outW, outC};
+
+    std::vector<uint32_t> outIdxes;
+    ANeuralNetworksOperandType operandType;
+    operandType.type = operandcode;
+    operandType.dimensionCount = static_cast<uint32_t>(outDims.size());
+    operandType.dimensions = outDims.data();
+    operandType.scale = scale;
+    operandType.zeroPoint = zeroPoint;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+
+    operandIdxes[output] = opIdx;
+    shapeIdxes[output] = outDims;
+    outIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperation(model, ANEURALNETWORKS_DEQUANTIZE, parameterIdxes.size(), &parameterIdxes[0], outIdxes.size(), &outIdxes[0]) );
+}
+
+
+void ModelBuilder::setInputTensors(std::string name,
+                                void* dataptr,
+                                OperandCode operandcode
+                                )
 {
     uint32_t idx = operandIdxes.at(name);
     std::vector<uint32_t> shape = shapeIdxes.at(name);
@@ -497,7 +632,10 @@ void ModelBuilder::setInputTensors (std::string name, void* dataptr, OperandCode
     inputTensors.push_back({idx, shape, sizebyte, name, dataptr});
 }
 
-void ModelBuilder::setOutputTensors (std::string name, OperandCode operandcode)
+
+void ModelBuilder::setOutputTensors(std::string name,
+                                    OperandCode operandcode
+                                    )
 {
     uint32_t idx = operandIdxes.at(name);
     std::vector<uint32_t> shape = shapeIdxes.at(name);
