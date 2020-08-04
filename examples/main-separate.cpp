@@ -54,7 +54,7 @@ int main(int ac, char *av[])
 {
     auto ret = cudaMalloc(&inputDevice, 3 * 480 * 640 * 4);
     assert(ret == cudaSuccess);
-    ret = cudaMalloc(&clsScoreDevice, 76 * 60 * 80 * 4);
+    ret = cudaMalloc(&clsScoreDevice, 3 * 60 * 80 * 4);
     assert(ret == cudaSuccess);
     ret = cudaMalloc(&centernessDevice, 1 * 60 * 80 * 4);
     assert(ret == cudaSuccess);
@@ -68,19 +68,19 @@ int main(int ac, char *av[])
     assert(ret == cudaSuccess);
     ret = cudaMalloc(&downAvg4Device, 3 * 30 * 40 * 4);
     assert(ret == cudaSuccess);
-    ret = cudaMalloc(&segDevice, 13 * 240 * 320 * 4);
+    ret = cudaMalloc(&segDevice, 5 * 240 * 320 * 4);
     assert(ret == cudaSuccess);
 
 
     inputHost = malloc(3 * 480 * 640 * 4);
     assert(inputHost != nullptr);
-    clsScoreHost = malloc(76 * 60 * 80 * 4);
+    clsScoreHost = malloc(3 * 60 * 80 * 4);
     assert(clsScoreHost != nullptr);
     centernessHost = malloc(1 * 60 * 80 * 4);
     assert(centernessHost != nullptr);
     bboxPredHost = malloc(4 * 60 * 80 * 4);
     assert(bboxPredHost != nullptr);
-    segHost = malloc(13 * 240 * 320 * 4);
+    segHost = malloc(5 * 240 * 320 * 4);
     assert(segHost != nullptr);
 
 
@@ -111,7 +111,7 @@ int main(int ac, char *av[])
 
         initLibNvInferPlugins(&logger, "");
 
-        std::ifstream engineFile1("/home/gw/Documents/NN-inference-edge/data/espnetv2_part1_det_fp16.engine", std::ios::binary);
+        std::ifstream engineFile1("/home/gw/NN-inference-edge/data/espnet_0716_det_fp16.engine", std::ios::binary);
         std::vector<char> engineFileStream1(std::istreambuf_iterator<char>(engineFile1), {});
         auto runtime1 = gallopwave::NVUniquePtr<nvinfer1::IRuntime>(nvinfer1::createInferRuntime(logger));
         auto engine1 = gallopwave::NVUniquePtr<nvinfer1::ICudaEngine>(runtime1->deserializeCudaEngine(engineFileStream1.data(), engineFileStream1.size(), nullptr));
@@ -142,7 +142,7 @@ int main(int ac, char *av[])
 
             cudaMemcpyAsync(inputDevice, inputHost, 3 * 480 * 640 * 4, cudaMemcpyHostToDevice, stream1);
             context1->enqueue(1, devbinds1.data(), stream1, nullptr);
-            cudaMemcpyAsync(clsScoreHost, clsScoreDevice, 76 * 60 * 80 * 4, cudaMemcpyDeviceToHost, stream1);
+            cudaMemcpyAsync(clsScoreHost, clsScoreDevice, 3 * 60 * 80 * 4, cudaMemcpyDeviceToHost, stream1);
             cudaMemcpyAsync(centernessHost, centernessDevice, 1 * 60 * 80 * 4, cudaMemcpyDeviceToHost, stream1);
             cudaMemcpyAsync(bboxPredHost, bboxPredDevice, 4 * 60 * 80 * 4, cudaMemcpyDeviceToHost, stream1);
 
@@ -175,7 +175,7 @@ int main(int ac, char *av[])
 
         initLibNvInferPlugins(&logger, "");
 
-        std::ifstream engineFile2("/home/gw/Documents/NN-inference-edge/data/espnetv2_part2_seg_fp16.engine", std::ios::binary);
+        std::ifstream engineFile2("/home/gw/NN-inference-edge/data/espnet_0716_seg_fp16.engine", std::ios::binary);
         std::vector<char> engineFileStream2(std::istreambuf_iterator<char>(engineFile2), {});
         auto runtime2 = gallopwave::NVUniquePtr<nvinfer1::IRuntime>(nvinfer1::createInferRuntime(logger));
         auto engine2 = gallopwave::NVUniquePtr<nvinfer1::ICudaEngine>(runtime2->deserializeCudaEngine(engineFileStream2.data(), engineFileStream2.size(), nullptr));
@@ -202,7 +202,7 @@ int main(int ac, char *av[])
             std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
 
             context2->enqueue(1, devbinds2.data(), stream2, nullptr);
-            cudaMemcpyAsync(segHost, segDevice, 13 * 240 * 320 * 4, cudaMemcpyDeviceToHost, stream2);
+            cudaMemcpyAsync(segHost, segDevice, 5 * 240 * 320 * 4, cudaMemcpyDeviceToHost, stream2);
             cudaStreamSynchronize(stream2); // Wait for the work in the stream to complete
 
             std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();

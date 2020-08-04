@@ -12,10 +12,30 @@
 
 #include "log_stream.hpp"
 #include "nv/run_model.hpp"
+#include "postprocess_fcos.hpp"
 
 static auto LOG = spdlog::stdout_color_mt("MAIN");
 
 
+void plotResult(cv::Mat &im, std::vector<std::vector<KeyPoint>> &result)
+{
+    const int numClass = result.size();
+    for (int clsIdx = 0; clsIdx < numClass; ++clsIdx)
+    {
+        std::vector<KeyPoint> &shapes = result[clsIdx];
+        const int numShape = shapes.size();
+        for (int sIdx = 0; sIdx < numShape; ++sIdx)
+        {
+            cv::Point vertices[2];
+            vertices[0].x = shapes[sIdx].vertexTL.x * im.cols;
+            vertices[0].y = shapes[sIdx].vertexTL.y * im.rows;
+            vertices[1].x = shapes[sIdx].vertexBR.x * im.cols;
+            vertices[1].y = shapes[sIdx].vertexBR.y * im.rows;
+
+            cv::rectangle(im, vertices[0], vertices[1], cv::Scalar(0, 0, 255), 1, 16);
+        }
+    }
+}
 
 int main(int ac, char *av[])
 {
@@ -40,25 +60,20 @@ int main(int ac, char *av[])
     const float STDR = config["model"]["std"]["R"].get<float>();
     const float STDG = config["model"]["std"]["G"].get<float>();
     const float STDB = config["model"]["std"]["B"].get<float>();
-    const std::string ONNXPATH = config["onnx"]["onnxpath"].get<std::string>();
-    std::vector<std::string> IN_TENSOR_NAMES = config["onnx"]["input_layer"].get<std::vector<std::string> >();
-    std::vector<std::string> OUT_TENSOR_NAMES = config["onnx"]["output_layer"].get<std::vector<std::string> >();
-    const bool FP16MODE = config["onnx"]["fp16_mode"].get<bool>();
+    std::vector<std::string> IN_TENSOR_NAMES = config["trt"]["input_layer_name"].get<std::vector<std::string> >();
+    std::vector<std::string> OUT_TENSOR_NAMES = config["trt"]["output_layer_name"].get<std::vector<std::string> >();
     const std::string TRT_ENGINE_PATH = config["trt"]["engine"].get<std::string>();
     const std::string IMPATH = config["evaluate"]["image_path"].get<std::string>();
     const int EVALUATE_TIMES = config["evaluate"]["times"].get<int>();
 
 
+    PostprocessFCOS postprocesser(config["model"]);
+    gallopwave::NVModel nvmodel(TRT_ENGINE_PATH);
 
-    gallopwave::NVModel nvmodel(ONNXPATH, FP16MODE);
-    nvmodel.outputEngine(TRT_ENGINE_PATH);
-
-    // gallopwave::NVModel nvmodel(TRT_ENGINE_PATH);
 
     float* intensorPtrR = static_cast<float*>(nvmodel.getHostBuffer(IN_TENSOR_NAMES[0]));
     float* intensorPtrG = intensorPtrR + NET_PLANESIZE;
     float* intensorPtrB = intensorPtrG + NET_PLANESIZE;
-
     cv::Mat im = cv::imread(IMPATH);
     cv::Mat imnet;
     cv::resize(im, imnet, cv::Size(NETW, NETH));
@@ -79,12 +94,16 @@ int main(int ac, char *av[])
     const float* centernessTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[2]));
     const float* segTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[3]));
 
-    SLOG_INFO << scoresTensor[0] << std::endl;
-    SLOG_INFO << centernessTensor[0] << std::endl;
-    SLOG_INFO << vertexTensor[0] << std::endl;
-    SLOG_INFO << segTensor[0] << std::endl;
+    // SLOG_INFO << scoresTensor[0] << ',' << scoresTensor[1] << ',' << scoresTensor[2] << ',' << scoresTensor[3] << ',' << scoresTensor[4] << std::endl;
+    // SLOG_INFO << vertexTensor[0] << ',' << vertexTensor[1] << ',' << vertexTensor[2] << ',' << vertexTensor[3] << ',' << vertexTensor[4] << std::endl;
+    // SLOG_INFO << centernessTensor[0] << ',' << centernessTensor[1] << ',' << centernessTensor[2] << ',' << centernessTensor[3] << ',' << centernessTensor[4] << std::endl;
+    // SLOG_INFO << segTensor[0] << ',' << segTensor[1] << ',' << segTensor[2] << ',' << segTensor[3] << ',' << segTensor[4] << std::endl;
 
+    std::vector<const float *> featuremaps {scoresTensor, centernessTensor, vertexTensor};
+    auto result = postprocesser.run(featuremaps);
 
+    plotResult(imnet, result);
+    cv::imwrite("result.jpg", imnet);
 
     return 0;
 }

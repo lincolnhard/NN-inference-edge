@@ -3,6 +3,7 @@ CXXCL := g++
 NVCXX := nvcc
 
 CXXFLAGS := -O3 -std=c++17
+CXXFLAGS += -fomit-frame-pointer -fstrict-aliasing -ffast-math -fvisibility=hidden -fvisibility-inlines-hidden -fno-rtti
 NVCXXFLAGS := -O3 -std=c++14
 
 CUDA_ARCH := -gencode arch=compute_53,code=sm_53 -gencode arch=compute_62,code=sm_62 -gencode arch=compute_72,code=sm_72
@@ -33,11 +34,15 @@ SRCFILES += $(wildcard src/nie/*.cu)
 
 
 
-EXAMPLEFILES := examples/bisenet.cpp
+# EXAMPLEFILES := examples/bisenet.cpp
 # EXAMPLEFILES := examples/mobilenetv2ssd.cpp
-# EXAMPLEFILES := examples/main-create-engine.cpp
-# EXAMPLEFILES := examples/main-test-engine-fps.cpp
+# EXAMPLEFILES := examples/espnet.cpp
+EXAMPLEFILES := examples/main-create-engine.cpp
+# EXAMPLEFILES := examples/main-engine-fps.cpp
 # EXAMPLEFILES := examples/main-multiple.cpp
+# EXAMPLEFILES := examples/separate_related_model.cpp
+
+
 
 OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cu, %.o, $(patsubst %.cpp, %.o, $(SRCFILES) $(EXAMPLEFILES))))
 

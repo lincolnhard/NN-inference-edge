@@ -3,8 +3,6 @@
 #include <vector>
 #include <json.hpp>
 
-// Equal to training.json -> model: max_joints
-#define MAX_NUM_VERTEX 6
 
 typedef struct
 {
@@ -12,16 +10,29 @@ typedef struct
     float y;
 } Coordinate;
 
+// typedef struct
+// {
+//     int classId;
+//     std::vector<float> classScores;
+//     float scoreForSort;
+//     float centerness;
+//     Coordinate gridcenter;
+//     Coordinate vertex[MAX_NUM_VERTEX];
+//     Coordinate vertexCenter;
+// } KeyPoint;
+
 typedef struct
 {
-    int classId; // seems useless
+    int classId;
     std::vector<float> classScores;
     float scoreForSort;
     float centerness;
     Coordinate gridcenter;
-    Coordinate vertex[MAX_NUM_VERTEX];
+    Coordinate vertexTL;
+    Coordinate vertexBR;
     Coordinate vertexCenter;
 } KeyPoint;
+
 
 class PostprocessFCOS
 {
@@ -40,7 +51,7 @@ private:
     int topk;
     float nmsTh;
     std::vector<float> classScoreTh;
-    std::vector<Coordinate> meshgrid;
+    std::vector<Coordinate> meshgrid; // mlvl_points
     void initMeshgrid();
     Coordinate getAvgCenter(KeyPoint kpt);
 };
