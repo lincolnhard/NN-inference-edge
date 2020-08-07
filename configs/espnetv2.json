@@ -20,15 +20,16 @@
         "net_height": 480,
         "feature_width": 80,
         "feature_height": 60,
-        "num_class": 3,
+        "num_class_bbox": 3,
         "stride": 8,
         "topK": 1000,
         "nms_threshold": 25,
-        "class_score_threshold": [0.3, 0.3, 0.3]
+        "class_score_threshold": [0.3, 0.3, 0.3],
+        "num_class_seg": 5
     },
     "trt":{
-        "onnxpath": "/home/gw/NN-inference-edge/data/espnet_0716_det.onnx",
-        "engine": "/home/gw/NN-inference-edge/data/espnet_0716_det_fp32.engine",
+        "onnxpath": "/home/gw/NN-inference-edge/data/espnet_0716_full.onnx",
+        "engine": "/home/gw/NN-inference-edge/data/espnet_0716_full_fp32.engine",
         "input_layer_name": ["input"],
         "input_layer_shape": [[3, 480, 640]],
         "output_layer_name": ["cls_score", "bbox_pred", "centerness", "seg"],

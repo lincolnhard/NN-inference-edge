@@ -2,6 +2,7 @@
 #include <vector>
 #include <chrono>
 #include <thread>
+#include <algorithm>
 
 #include <json.hpp>
 #include <spdlog/spdlog.h>
@@ -17,7 +18,78 @@
 static auto LOG = spdlog::stdout_color_mt("MAIN");
 
 
-void plotResult(cv::Mat &im, std::vector<std::vector<KeyPoint>> &result)
+void plotResult(cv::Mat &im, std::vector<std::vector<KeyPoint>> &result, const float* segbuf, int numSegClass)
+{
+    cv::RNG rng(12345);
+    const int PLANESIZE = im.cols * im.rows;
+    std::vector<const float*> segptrs;
+    std::vector<cv::Vec3b> colors;
+    for (int clsIdx = 0; clsIdx < numSegClass; ++clsIdx)
+    {
+        segptrs.push_back(segbuf + clsIdx * PLANESIZE);
+        colors.push_back(cv::Vec3b(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)));
+    }
+    for (int pixIdx = 0; pixIdx < PLANESIZE; ++pixIdx)
+    {
+        int cls = std::distance(segptrs.begin(), std::max_element(segptrs.begin(), segptrs.end(), [](const float *x, const float *y){return (*x < *y);}));
+        if (cls != 0)
+        {
+            im.at<cv::Vec3b>(pixIdx) = colors[cls];
+        }
+        for (int clsIdx = 0; clsIdx < numSegClass; ++clsIdx)
+        {
+            segptrs[clsIdx] += 1;
+        }
+    }
+
+
+    const int numBboxClass = result.size();
+    for (int clsIdx = 0; clsIdx < numBboxClass; ++clsIdx)
+    {
+        std::vector<KeyPoint> &shapes = result[clsIdx];
+        const int numShape = shapes.size();
+        for (int sIdx = 0; sIdx < numShape; ++sIdx)
+        {
+            cv::Point vertices[2];
+            vertices[0].x = shapes[sIdx].vertexTL.x * im.cols;
+            vertices[0].y = shapes[sIdx].vertexTL.y * im.rows;
+            vertices[1].x = shapes[sIdx].vertexBR.x * im.cols;
+            vertices[1].y = shapes[sIdx].vertexBR.y * im.rows;
+
+            cv::rectangle(im, vertices[0], vertices[1], cv::Scalar(0, 0, 255), 1, 16);
+        }
+    }
+}
+
+
+void plotSegResult(cv::Mat &im, const float* segbuf, int NUM_CLASSES)
+{
+    cv::RNG rng(12345);
+    const int PLANESIZE = im.cols * im.rows;
+    std::vector<const float*> segptrs;
+    std::vector<cv::Vec3b> colors;
+    for (int clsIdx = 0; clsIdx < NUM_CLASSES; ++clsIdx)
+    {
+        segptrs.push_back(segbuf + clsIdx * PLANESIZE);
+        colors.push_back(cv::Vec3b(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)));
+    }
+
+    for (int pixIdx = 0; pixIdx < PLANESIZE; ++pixIdx)
+    {
+        int cls = std::distance(segptrs.begin(), std::max_element(segptrs.begin(), segptrs.end(), [](const float *x, const float *y){return (*x < *y);}));
+        if (cls != 0)
+        {
+            im.at<cv::Vec3b>(pixIdx) = colors[cls];
+        }
+        for (int clsIdx = 0; clsIdx < NUM_CLASSES; ++clsIdx)
+        {
+            segptrs[clsIdx] += 1;
+        }
+    }
+}
+
+
+void plotBboxResult(cv::Mat &im, std::vector<std::vector<KeyPoint>> &result)
 {
     const int numClass = result.size();
     for (int clsIdx = 0; clsIdx < numClass; ++clsIdx)
@@ -36,6 +108,7 @@ void plotResult(cv::Mat &im, std::vector<std::vector<KeyPoint>> &result)
         }
     }
 }
+
 
 int main(int ac, char *av[])
 {
@@ -60,6 +133,7 @@ int main(int ac, char *av[])
     const float STDR = config["model"]["std"]["R"].get<float>();
     const float STDG = config["model"]["std"]["G"].get<float>();
     const float STDB = config["model"]["std"]["B"].get<float>();
+    const int NUM_SEG_CLASSES = config["model"]["num_class_seg"].get<int>();
     std::vector<std::string> IN_TENSOR_NAMES = config["trt"]["input_layer_name"].get<std::vector<std::string> >();
     std::vector<std::string> OUT_TENSOR_NAMES = config["trt"]["output_layer_name"].get<std::vector<std::string> >();
     const std::string TRT_ENGINE_PATH = config["trt"]["engine"].get<std::string>();
@@ -89,6 +163,7 @@ int main(int ac, char *av[])
     nvmodel.run();
 
 
+
     const float* scoresTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[0]));
     const float* vertexTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[1]));
     const float* centernessTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[2]));
@@ -100,9 +175,18 @@ int main(int ac, char *av[])
     // SLOG_INFO << segTensor[0] << ',' << segTensor[1] << ',' << segTensor[2] << ',' << segTensor[3] << ',' << segTensor[4] << std::endl;
 
     std::vector<const float *> featuremaps {scoresTensor, centernessTensor, vertexTensor};
-    auto result = postprocesser.run(featuremaps);
+    auto fcosResult = postprocesser.run(featuremaps);
 
-    plotResult(imnet, result);
+
+
+
+    // cv::Mat imnet2 = imnet.clone();
+    // plotBboxResult(imnet, fcosResult);
+    // cv::imwrite("bbox.jpg", imnet);
+    // plotSegResult(imnet2, segTensor, NUM_SEG_CLASSES);
+    // cv::imwrite("seg.jpg", imnet2);
+
+    plotResult(imnet, fcosResult, segTensor, NUM_SEG_CLASSES);
     cv::imwrite("result.jpg", imnet);
 
     return 0;

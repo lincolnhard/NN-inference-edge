@@ -52,7 +52,7 @@ PostprocessFCOS::PostprocessFCOS(const nlohmann::json config)
     featH = config["feature_height"].get<int>();
     stride = config["stride"].get<int>();
     topk = config["topK"].get<int>();
-    numClass = config["num_class"].get<int>();
+    numClass = config["num_class_bbox"].get<int>();
     nmsTh = config["nms_threshold"].get<float>();
     classScoreTh = config["class_score_threshold"].get<std::vector<float> >();
 
