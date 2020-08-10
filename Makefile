@@ -1,43 +1,29 @@
-# CXXCL := toolchain/aarch64-unknown-linux-gnu/bin/aarch64-unknown-linux-gnu-g++
 CXXCL := g++
-NVCXX := nvcc
 
 CXXFLAGS := -O3 -std=c++17
-NVCXXFLAGS := -O3 -std=c++14
-
-CUDA_ARCH := -gencode arch=compute_53,code=sm_53 -gencode arch=compute_62,code=sm_62 -gencode arch=compute_72,code=sm_72
 
 INCLUDES := -I src
-INCLUDES += -I /usr/include/opencv4
+INCLUDES += -I /usr/local/include
+INCLUDES += -I /usr/include/rockchip
 INCLUDES += -I libraries/spdlog/include
 INCLUDES += -I libraries/nlohmann-json
-INCLUDES += -I /usr/local/cuda/include
 
 # DEFINES := -D NDEBUG
 
-
-LDFLAGS := -L/usr/lib/aarch64-linux-gnu
-LDFLAGS += -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio -lopencv_dnn
-LDFLAGS += -lglog -lboost_system
-LDFLAGS += -lnvinfer -lnvparsers -lcuda -lnvinfer_plugin -lnvonnxparser -lnvonnxparser_runtime
-LDFLAGS += -L/usr/local/cuda-10.0/targets/aarch64-linux/lib
-LDFLAGS += -lcudart
-LDFLAGS += -pthread -lm -lstdc++fs
+LDFLAGS := -L/lib64
+LDFLAGS += -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio
+LDFLAGS += -lrknn_api
+LDFLAGS += -pthread -lm
 
 OBJROOT := obj
 
 SRCFILES := $(wildcard src/*.cpp)
-SRCFILES += $(wildcard src/nv/*.cpp)
-SRCFILES += $(wildcard src/nie/*.cpp)
-SRCFILES += $(wildcard src/nie/*.cu)
+SRCFILES += $(wildcard src/rknn/*.cpp)
 
 
 
-EXAMPLEFILES := examples/bisenet.cpp
-# EXAMPLEFILES := examples/mobilenetv2ssd.cpp
-# EXAMPLEFILES := examples/main-create-engine.cpp
-# EXAMPLEFILES := examples/main-test-engine-fps.cpp
-# EXAMPLEFILES := examples/main-multiple.cpp
+EXAMPLEFILES := examples/main-run.cpp
+
 
 OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cu, %.o, $(patsubst %.cpp, %.o, $(SRCFILES) $(EXAMPLEFILES))))
 
@@ -54,8 +40,6 @@ all: obj $(OBJS)
 
 $(OBJROOT)/%.o: %.cpp
 	$(CXXCL) -c -pipe $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o $@
-$(OBJROOT)/%.o: %.cu
-	$(NVCXX) -c $(NVCXXFLAGS) $(CUDA_ARCH) $(DEFINES) $(INCLUDES) $< -o $@
 
 obj:
 	mkdir -vp $(OBJROOT) $(dir $(OBJS))
