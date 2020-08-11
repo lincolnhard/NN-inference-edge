@@ -1,14 +1,14 @@
 {
     "evaluate":{
-        "times": 5000,
+        "times": 100,
         "image_path": "/home/toybrick/NN-inference-edge/data/road7.png"
     },
     "model":{
-        "net_width": 512,
-        "net_height": 512,
+        "net_width": 640,
+        "net_height": 480,
         "net_channels": 3
     },
     "rknn":{
-        "modelpath": "/home/toybrick/NN-inference-edge/data/nie-mobilenetssd-int8.rknn"
+        "modelpath": "/home/toybrick/NN-inference-edge/data/espnetv2_segfcos.rknn"
     }
 }

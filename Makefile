@@ -30,7 +30,7 @@ OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cu, %.o, $(patsubst %.cpp, %.o, $(
 # $(error LHH: '$(OBJS)')
 
 
-APP_NAME := aurora
+APP_NAME := primus
 
 
 
