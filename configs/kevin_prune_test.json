@@ -1,0 +1,20 @@
+{
+    "evaluate":{
+        "times": 1000,
+        "image_path": "/home/gw/pics-1024x512/road3.png",
+        "folder_path": "/home/gw/pics-1024x512",
+        "extension": ".png"
+    },
+    "model":{
+        "net_width": 640,
+        "net_height": 480
+    },
+    "trt":{
+        "onnxpath": "/home/gw/NN-inference-edge/data/kevin/best_pruned_60_0716_layer14_level4_0_inp_reinf_1_20200807.onnx", 
+        "engine": "/home/gw/NN-inference-edge/data/kevin/best_pruned_60_0716_layer14_level4_0_inp_reinf_1_20200807_fp16.engine",
+        "input_layer_name": ["input"],
+        "input_layer_shape": [[3, 480, 640]],
+        "output_layer_name": ["cls_score", "bbox_pred", "centerness", "seg"],
+        "fp16_mode": true
+    }
+}

@@ -12,6 +12,7 @@ INCLUDES := -I src
 INCLUDES += -I /usr/include/opencv4
 INCLUDES += -I libraries/spdlog/include
 INCLUDES += -I libraries/nlohmann-json
+INCLUDES += -I libraries/RxCpp/Rx/v2/src
 INCLUDES += -I /usr/local/cuda/include
 
 # DEFINES := -D NDEBUG
@@ -37,10 +38,11 @@ SRCFILES += $(wildcard src/nie/*.cu)
 # EXAMPLEFILES := examples/bisenet.cpp
 # EXAMPLEFILES := examples/mobilenetv2ssd.cpp
 # EXAMPLEFILES := examples/espnet.cpp
-EXAMPLEFILES := examples/main-create-engine.cpp
-# EXAMPLEFILES := examples/main-engine-fps.cpp
+# EXAMPLEFILES := examples/espnet-async2.cpp
+# EXAMPLEFILES := examples/main-create-engine.cpp
+EXAMPLEFILES := examples/main-engine-fps.cpp
 # EXAMPLEFILES := examples/main-multiple.cpp
-# EXAMPLEFILES := examples/separate_related_model.cpp
+
 
 
 
@@ -49,7 +51,7 @@ OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cu, %.o, $(patsubst %.cpp, %.o, $(
 # $(error LHH: '$(OBJS)')
 
 
-APP_NAME := aurora
+APP_NAME := primus
 
 
 

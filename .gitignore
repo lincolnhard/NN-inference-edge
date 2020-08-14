@@ -11,7 +11,7 @@ pics
 app/jni/obj
 **/*.pyc
 **/*.o
-aurora
+primus
 result.jpg
 obj
 data

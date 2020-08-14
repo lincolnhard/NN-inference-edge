@@ -28,11 +28,11 @@
         "num_class_seg": 5
     },
     "trt":{
-        "onnxpath": "/home/gw/NN-inference-edge/data/espnet_0716_full.onnx",
-        "engine": "/home/gw/NN-inference-edge/data/espnet_0716_full_fp32.engine",
+        "onnxpath": "/home/gw/NN-inference-edge/data/espnet_0807_full.onnx",
+        "engine": "/home/gw/NN-inference-edge/data/espnet_0807_full_fp32.engine",
         "input_layer_name": ["input"],
         "input_layer_shape": [[3, 480, 640]],
         "output_layer_name": ["cls_score", "bbox_pred", "centerness", "seg"],
-        "fp16_mode": false
+        "fp16_mode": true
     }
 }

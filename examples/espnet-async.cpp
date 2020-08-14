@@ -3,6 +3,8 @@
 #include <chrono>
 #include <thread>
 #include <mutex>
+#include <algorithm>
+#include <experimental/filesystem>
 #include <signal.h>
 
 #include <json.hpp>
@@ -12,7 +14,10 @@
 #include "nv/run_model.hpp"
 #include <NvInferRuntimeCommon.h>
 #include <cuda_runtime_api.h>
-
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/videoio/videoio.hpp>
 
 
 
@@ -42,7 +47,7 @@ void *downAvg4DeviceClone;
 
 std::mutex thmutex;
 bool isTimeToStop = false;
-
+cv::Mat im;
 
 void sigintHandler(int sig)
 {
@@ -52,51 +57,35 @@ void sigintHandler(int sig)
 
 int main(int ac, char *av[])
 {
-    auto ret = cudaMalloc(&inputDevice, 3 * 480 * 640 * 4);
-    assert(ret == cudaSuccess);
-    ret = cudaMalloc(&clsScoreDevice, 3 * 60 * 80 * 4);
-    assert(ret == cudaSuccess);
-    ret = cudaMalloc(&centernessDevice, 1 * 60 * 80 * 4);
-    assert(ret == cudaSuccess);
-    ret = cudaMalloc(&bboxPredDevice, 4 * 60 * 80 * 4);
-    assert(ret == cudaSuccess);
-    ret = cudaMalloc(&encOutL3Device, 128 * 60 * 80 * 4);
-    assert(ret == cudaSuccess);
-    ret = cudaMalloc(&encOutL2Device, 64 * 120 * 160 * 4);
-    assert(ret == cudaSuccess);
-    ret = cudaMalloc(&encOutL1Device, 32 * 240 * 320 * 4);
-    assert(ret == cudaSuccess);
-    ret = cudaMalloc(&downAvg4Device, 3 * 30 * 40 * 4);
-    assert(ret == cudaSuccess);
-    ret = cudaMalloc(&segDevice, 5 * 240 * 320 * 4);
-    assert(ret == cudaSuccess);
-
-
+    // inputs
     inputHost = malloc(3 * 480 * 640 * 4);
-    assert(inputHost != nullptr);
+    cudaMalloc(&inputDevice, 3 * 480 * 640 * 4);
+
+    // outputs
     clsScoreHost = malloc(3 * 60 * 80 * 4);
-    assert(clsScoreHost != nullptr);
+    cudaMalloc(&clsScoreDevice, 3 * 60 * 80 * 4);
     centernessHost = malloc(1 * 60 * 80 * 4);
-    assert(centernessHost != nullptr);
+    cudaMalloc(&centernessDevice, 1 * 60 * 80 * 4);
     bboxPredHost = malloc(4 * 60 * 80 * 4);
-    assert(bboxPredHost != nullptr);
-    segHost = malloc(5 * 240 * 320 * 4);
-    assert(segHost != nullptr);
+    cudaMalloc(&bboxPredDevice, 4 * 60 * 80 * 4);
+    segHost = malloc(5 * 480 * 640 * 4);
+    cudaMalloc(&segDevice, 5 * 480 * 640 * 4);
 
+    // middle layers
+    cudaMalloc(&encOutL3Device, 128 * 60 * 80 * 4);
+    cudaMalloc(&encOutL2Device, 64 * 120 * 160 * 4);
+    cudaMalloc(&encOutL1Device, 32 * 240 * 320 * 4);
+    cudaMalloc(&downAvg4Device, 3 * 30 * 40 * 4);
 
-    ret = cudaMalloc(&encOutL3DeviceClone, 128 * 60 * 80 * 4);
-    assert(ret == cudaSuccess);
-    ret = cudaMalloc(&encOutL2DeviceClone, 64 * 120 * 160 * 4);
-    assert(ret == cudaSuccess);
-    ret = cudaMalloc(&encOutL1DeviceClone, 32 * 240 * 320 * 4);
-    assert(ret == cudaSuccess);
-    ret = cudaMalloc(&downAvg4DeviceClone, 3 * 30 * 40 * 4);
-    assert(ret == cudaSuccess);
+    cudaMalloc(&encOutL3DeviceClone, 128 * 60 * 80 * 4);
+    cudaMalloc(&encOutL2DeviceClone, 64 * 120 * 160 * 4);
+    cudaMalloc(&encOutL1DeviceClone, 32 * 240 * 320 * 4);
+    cudaMalloc(&downAvg4DeviceClone, 3 * 30 * 40 * 4);
 
+    // interupt handling
     signal(SIGINT, sigintHandler);
 
-
-
+    // set cuda stream priority
     // int priorityHigh = 0;
     // int priorityLow = 0;
     // cudaDeviceGetStreamPriorityRange(&priorityLow, &priorityHigh);
@@ -105,12 +94,11 @@ int main(int ac, char *av[])
 
 
 
+#if 0
     std::thread detTh = std::thread([](){
 
         gallopwave::NVLogger logger;
-
         initLibNvInferPlugins(&logger, "");
-
         std::ifstream engineFile1("/home/gw/NN-inference-edge/data/espnet_0716_det_fp16.engine", std::ios::binary);
         std::vector<char> engineFileStream1(std::istreambuf_iterator<char>(engineFile1), {});
         auto runtime1 = gallopwave::NVUniquePtr<nvinfer1::IRuntime>(nvinfer1::createInferRuntime(logger));
@@ -226,24 +214,28 @@ int main(int ac, char *av[])
 
     detTh.join();
     segTh.join();
+#endif
 
 
+    // inputs
+    free(inputHost);
     cudaFree(inputDevice);
+
+    // outputs
+    free(clsScoreHost);
     cudaFree(clsScoreDevice);
+    free(centernessHost);
     cudaFree(centernessDevice);
+    free(bboxPredHost);
     cudaFree(bboxPredDevice);
+    free(segHost);
+    cudaFree(segDevice);
+
+    // middle layers
     cudaFree(encOutL3Device);
     cudaFree(encOutL2Device);
     cudaFree(encOutL1Device);
     cudaFree(downAvg4Device);
-    cudaFree(segDevice);
-
-    free(inputHost);
-    free(clsScoreHost);
-    free(centernessHost);
-    free(bboxPredHost);
-    free(segHost);
-
     cudaFree(encOutL3DeviceClone);
     cudaFree(encOutL2DeviceClone);
     cudaFree(encOutL1DeviceClone);
