@@ -54,4 +54,13 @@ private:
     std::vector<Coordinate> meshgrid; // mlvl_points
     void initMeshgrid();
     Coordinate getAvgCenter(KeyPoint kpt);
+    bool suppressedByDist(KeyPoint frontkpt, KeyPoint otherkpt, float th);
+    bool suppressedByIOU(KeyPoint frontkpt, KeyPoint otherkpt, float th);
+    template<typename T>
+    T overlap(T asmall, T abig, T bsmall, T bbig)
+    {
+        float small = asmall > bsmall ? asmall : bsmall;
+        float big = abig < bbig ? abig : bbig;
+        return big - small;
+    }
 };

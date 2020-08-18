@@ -9,13 +9,7 @@
 
 static auto LOG = spdlog::stdout_color_mt("FCOS");
 
-// Coordinate PostprocessFCOS::getAvgCenter(KeyPoint kpt)
-// {
-//     Coordinate avgpt;
-//     avgpt.x = 0.5f * (kpt.vertex[0].x + kpt.vertex[1].x);
-//     avgpt.y = 0.5f * (kpt.vertex[0].y + kpt.vertex[1].y);
-//     return avgpt;
-// }
+
 
 
 void PostprocessFCOS::initMeshgrid()
@@ -39,6 +33,43 @@ void PostprocessFCOS::initMeshgrid()
     }
 }
 
+
+bool PostprocessFCOS::suppressedByIOU(KeyPoint frontkpt, KeyPoint otherkpt, float th)
+{
+    auto ax1 = frontkpt.vertexTL.x;
+    auto ax2 = frontkpt.vertexBR.x;
+    auto ay1 = frontkpt.vertexTL.y;
+    auto ay2 = frontkpt.vertexBR.y;
+    auto bx1 = otherkpt.vertexTL.x;
+    auto bx2 = otherkpt.vertexBR.x;
+    auto by1 = otherkpt.vertexTL.y;
+    auto by2 = otherkpt.vertexBR.y;
+
+    auto w = overlap(ax1, ax2, bx1, bx2);
+    auto h = overlap(ay1, ay2, by1, by2);
+    if (w < 0 || h < 0)
+    {
+        return false;
+    }
+    auto interArea = w * h;
+    auto unionArea = (ax2 - ax1 + 1) * (ay2 - ay1 + 1) + (bx2 - bx1 + 1) * (by2 - by1 + 1) - interArea;
+    auto iou = interArea / unionArea;
+    return iou > th;
+}
+
+
+bool PostprocessFCOS::suppressedByDist(KeyPoint frontkpt, KeyPoint otherkpt, float th)
+{
+    Coordinate othervc = otherkpt.vertexCenter;
+    Coordinate frontvc = frontkpt.vertexCenter;
+    float xdiff = frontvc.x - othervc.x;
+    float ydiff = frontvc.y - othervc.y;
+    float dist = xdiff * xdiff + ydiff * ydiff;
+    float squareNmsTh = th * th;
+    return dist < squareNmsTh;
+}
+
+
 PostprocessFCOS::~PostprocessFCOS()
 {
 
@@ -53,7 +84,8 @@ PostprocessFCOS::PostprocessFCOS(const nlohmann::json config)
     stride = config["stride"].get<int>();
     topk = config["topK"].get<int>();
     numClass = config["num_class_bbox"].get<int>();
-    nmsTh = config["nms_threshold"].get<float>();
+    // nmsTh = config["nms_threshold_dist"].get<float>();
+    nmsTh = config["nms_threshold_iou"].get<float>();
     classScoreTh = config["class_score_threshold"].get<std::vector<float> >();
 
     assert(netW == featW * stride);
@@ -140,7 +172,6 @@ std::vector<std::vector<KeyPoint>> PostprocessFCOS::run(std::vector<const float 
 
     // nms by bbox center distance, class independent
     std::vector<std::vector<KeyPoint>> nmsKeyPoints(numClass);
-    float squareNmsTh = nmsTh * nmsTh;
 
     for (int clsIdx = 0; clsIdx < numClass; ++clsIdx)
     {
@@ -149,20 +180,16 @@ std::vector<std::vector<KeyPoint>> PostprocessFCOS::run(std::vector<const float 
             // traverse from biggest score
             nmsKeyPoints[clsIdx].push_back(classKeyPoints[clsIdx].front());
             classKeyPoints[clsIdx].pop_front();
-            // classKeyPoints[clsIdx].erase(classKeyPoints[clsIdx].begin());
 
             int numRestKpt = classKeyPoints[clsIdx].size();
-
-            Coordinate frontvc = nmsKeyPoints[clsIdx].back().vertexCenter;
-
+            auto frontkpt = nmsKeyPoints[clsIdx].back();
             // suppresion start from least score
             for (int i = numRestKpt - 1; i >= 0; --i)
             {
-                Coordinate tmpvc = classKeyPoints[clsIdx][i].vertexCenter;
-                float xdiff = frontvc.x - tmpvc.x;
-                float ydiff = frontvc.y - tmpvc.y;
-                float dist = xdiff * xdiff + ydiff * ydiff;
-                if (dist < squareNmsTh)
+                auto otherkpt = classKeyPoints[clsIdx][i];
+
+                // if (suppressedByDist(frontkpt, otherkpt, nmsTh))
+                if (suppressedByIOU(frontkpt, otherkpt, nmsTh))
                 {
                     classKeyPoints[clsIdx].erase(classKeyPoints[clsIdx].begin() + i);
                 }

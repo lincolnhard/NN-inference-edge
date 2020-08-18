@@ -23,7 +23,8 @@
         "num_class_bbox": 3,
         "stride": 8,
         "topK": 1000,
-        "nms_threshold": 40,
+        "nms_threshold_dist": 40,
+        "nms_threshold_iou": 0.4,
         "class_score_threshold": [0.3, 0.3, 0.3],
         "num_class_seg": 4
     },
