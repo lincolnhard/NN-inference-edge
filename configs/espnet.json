@@ -23,9 +23,9 @@
         "num_class_bbox": 3,
         "stride": 8,
         "topK": 1000,
-        "nms_threshold": 25,
+        "nms_threshold": 40,
         "class_score_threshold": [0.3, 0.3, 0.3],
-        "num_class_seg": 5
+        "num_class_seg": 4
     },
     "trt":{
         "onnxpath": "/home/gw/NN-inference-edge/data/espnet_0807_full.onnx",
@@ -33,6 +33,6 @@
         "input_layer_name": ["input"],
         "input_layer_shape": [[3, 480, 640]],
         "output_layer_name": ["cls_score", "bbox_pred", "centerness", "seg"],
-        "fp16_mode": true
+        "fp16_mode": false
     }
 }

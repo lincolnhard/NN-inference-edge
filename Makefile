@@ -20,9 +20,9 @@ INCLUDES += -I /usr/local/cuda/include
 
 LDFLAGS := -L/usr/lib/aarch64-linux-gnu
 LDFLAGS += -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs -lopencv_videoio -lopencv_dnn
-LDFLAGS += -lglog -lboost_system
-LDFLAGS += -lnvinfer -lnvparsers -lcuda -lnvinfer_plugin -lnvonnxparser -lnvonnxparser_runtime
-LDFLAGS += -L/usr/local/cuda-10.0/targets/aarch64-linux/lib
+# LDFLAGS += -lglog -lboost_system
+LDFLAGS += -lnvinfer -lnvparsers -lcuda -lnvinfer_plugin -lnvonnxparser
+LDFLAGS += -L/usr/local/cuda-10.2/targets/aarch64-linux/lib
 LDFLAGS += -lcudart
 LDFLAGS += -pthread -lm -lstdc++fs
 
@@ -37,10 +37,10 @@ SRCFILES += $(wildcard src/nie/*.cu)
 
 # EXAMPLEFILES := examples/bisenet.cpp
 # EXAMPLEFILES := examples/mobilenetv2ssd.cpp
-# EXAMPLEFILES := examples/espnet.cpp
-# EXAMPLEFILES := examples/espnet-async2.cpp
+EXAMPLEFILES := examples/espnet.cpp
+# EXAMPLEFILES := examples/espnet-async.cpp
 # EXAMPLEFILES := examples/main-create-engine.cpp
-EXAMPLEFILES := examples/main-engine-fps.cpp
+# EXAMPLEFILES := examples/main-engine-fps.cpp
 # EXAMPLEFILES := examples/main-multiple.cpp
 
 

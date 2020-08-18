@@ -94,12 +94,12 @@ int main(int ac, char *av[])
 
 
 
-#if 0
+#if 1
     std::thread detTh = std::thread([](){
 
         gallopwave::NVLogger logger;
         initLibNvInferPlugins(&logger, "");
-        std::ifstream engineFile1("/home/gw/NN-inference-edge/data/espnet_0716_det_fp16.engine", std::ios::binary);
+        std::ifstream engineFile1("/home/gw/NN-inference-edge/data/espnet_0807_det_fp16.engine", std::ios::binary);
         std::vector<char> engineFileStream1(std::istreambuf_iterator<char>(engineFile1), {});
         auto runtime1 = gallopwave::NVUniquePtr<nvinfer1::IRuntime>(nvinfer1::createInferRuntime(logger));
         auto engine1 = gallopwave::NVUniquePtr<nvinfer1::ICudaEngine>(runtime1->deserializeCudaEngine(engineFileStream1.data(), engineFileStream1.size(), nullptr));
@@ -163,7 +163,7 @@ int main(int ac, char *av[])
 
         initLibNvInferPlugins(&logger, "");
 
-        std::ifstream engineFile2("/home/gw/NN-inference-edge/data/espnet_0716_seg_fp16.engine", std::ios::binary);
+        std::ifstream engineFile2("/home/gw/NN-inference-edge/data/espnet_0807_seg_fp16.engine", std::ios::binary);
         std::vector<char> engineFileStream2(std::istreambuf_iterator<char>(engineFile2), {});
         auto runtime2 = gallopwave::NVUniquePtr<nvinfer1::IRuntime>(nvinfer1::createInferRuntime(logger));
         auto engine2 = gallopwave::NVUniquePtr<nvinfer1::ICudaEngine>(runtime2->deserializeCudaEngine(engineFileStream2.data(), engineFileStream2.size(), nullptr));

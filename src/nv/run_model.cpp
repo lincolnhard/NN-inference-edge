@@ -58,7 +58,8 @@ gallopwave::NVModel::NVModel(std::string onnxPath, bool isFP16)
 {
     initLibNvInferPlugins(&logger, "");
     auto builder = NVUniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(logger));
-    auto network = NVUniquePtr<nvinfer1::INetworkDefinition>(builder->createNetworkV2(0U));
+    auto network = NVUniquePtr<nvinfer1::INetworkDefinition>(
+        builder->createNetworkV2(1U << static_cast<int>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH)));
     auto config = NVUniquePtr<nvinfer1::IBuilderConfig>(builder->createBuilderConfig());
     auto parser = NVUniquePtr<nvonnxparser::IParser>(nvonnxparser::createParser(*network, logger));
 
