@@ -1,4 +1,4 @@
-project(aurora)
+project(primus)
 
 cmake_minimum_required(VERSION 3.4.1)
 
@@ -18,7 +18,7 @@ include_directories(src
 )
 
 add_executable(${PROJECT_NAME}
-			examples/bisenet-uint8.cpp
+			examples/list-device.cpp
 			src/napi/builder.cpp
 			src/log_stream.cpp
 )
