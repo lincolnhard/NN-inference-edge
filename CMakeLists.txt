@@ -17,13 +17,49 @@ include_directories(src
 				libraries/nlohmann-json
 )
 
-add_executable(${PROJECT_NAME}
+add_executable(list-device
 			examples/list-device.cpp
 			src/napi/builder.cpp
 			src/log_stream.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(list-device
+				vulkan
+				android
+				neuralnetworks
+)
+
+add_executable(mobilenetssd-fp32
+			examples/list-device.cpp
+			src/napi/builder.cpp
+			src/log_stream.cpp
+)
+
+target_link_libraries(mobilenetssd-fp32
+				vulkan
+				android
+				neuralnetworks
+)
+
+add_executable(mobilenetssd-uint8
+			examples/list-device.cpp
+			src/napi/builder.cpp
+			src/log_stream.cpp
+)
+
+target_link_libraries(mobilenetssd-uint8
+				vulkan
+				android
+				neuralnetworks
+)
+
+add_executable(bisenet-uint8
+			examples/list-device.cpp
+			src/napi/builder.cpp
+			src/log_stream.cpp
+)
+
+target_link_libraries(bisenet-uint8
 				vulkan
 				android
 				neuralnetworks
