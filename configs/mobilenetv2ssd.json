@@ -11,12 +11,12 @@
         "class_score_threshold": 0.1
     },
     "trt":{
-        "onnxpath": "/home/gw/NN-inference-edge/data/mobilenet_ssd_voc_full.onnx",
-        "engine": "/home/gw/NN-inference-edge/data/mobilenet_ssd_voc_full_fp32.engine",
-        "input_layer_name": ["0"],
+        "onnxpath": "/home/gw/NN-inference-edge/data/abcde.onnx",
+        "engine": "/home/gw/NN-inference-edge/data/abcde_fp16.engine",
+        "input_layer_name": ["input"],
         "input_layer_shape": [[3, 512, 512]],
-        "output_layer_name": ["660"],
-        "output_layer_shape": [[100, 6]],
-        "fp16_mode": false
+        "output_layer_name": ["cls_logits", "bbox_pred"],
+        "output_layer_shape": [[6140, 21], [6140, 4]],
+        "fp16_mode": true
     }
 }
