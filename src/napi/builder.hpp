@@ -58,6 +58,11 @@ public:
     void eltwise(const std::string& name, const std::string& input1, const std::string& input2,
                 FuseCode fusecode, const std::string& output, OperandCode operandcode, EltwiseCode eltwisecode,
                 float scale = 0.001f, int32_t zeroPoint = 0);
+                
+	void avgpool(const std::string& name, const std::string& input, OperandCode operandcode,
+                int32_t padLeft, int32_t padRight, int32_t padTop, int32_t padBottom,
+                int32_t strideX, int32_t strideY, int32_t kernelW, int32_t kernelH,
+                FuseCode fusecode, const std::string& output, float scale = 0.001f, int32_t zeroPoint = 0);
     
     void maxpool(const std::string& name, const std::string& input, OperandCode operandcode,
                 int32_t padLeft, int32_t padRight, int32_t padTop, int32_t padBottom,

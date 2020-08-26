@@ -64,3 +64,15 @@ target_link_libraries(bisenet-uint8
 				android
 				neuralnetworks
 )
+
+add_executable(espnetv2-uint8
+			examples/espnetv2-uint8.cpp
+			src/napi/builder.cpp
+			src/log_stream.cpp
+)
+
+target_link_libraries(espnetv2-uint8
+				vulkan
+				android
+				neuralnetworks
+)

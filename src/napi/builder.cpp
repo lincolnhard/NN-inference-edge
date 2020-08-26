@@ -254,7 +254,6 @@ void ModelBuilder::conv2d (const std::string& name,
 
 }
 
-
 void ModelBuilder::eltwise (const std::string& name,
                             const std::string& input1,
                             const std::string& input2,
@@ -317,9 +316,114 @@ void ModelBuilder::eltwise (const std::string& name,
     }
 }
 
+void ModelBuilder::avgpool(const std::string& name,
+                        const std::string& input,
+                        OperandCode operandcode,
+                        int32_t padLeft,
+                        int32_t padRight,
+                        int32_t padTop,
+                        int32_t padBottom,
+                        int32_t strideX,
+                        int32_t strideY,
+                        int32_t kernelW,
+                        int32_t kernelH,
+                        FuseCode fusecode,
+                        const std::string& output,
+                        float scale,
+                        int32_t zeroPoint
+                        )
+{
+    std::vector<uint32_t> parameterIdxes;
+
+    const auto inputIdx = operandIdxes.at(input);
+    parameterIdxes.push_back(inputIdx);
+
+    ANeuralNetworksOperandType operandType;
+    operandType.type = ANEURALNETWORKS_INT32;
+    operandType.dimensionCount = 0;
+    operandType.dimensions = nullptr;
+    operandType.scale = 0.0f;
+    operandType.zeroPoint = 0;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType));
+    operandIdxes[name + "_padLeft"] = opIdx;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &padLeft, sizeof(padLeft)) );
+    parameterIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+    operandIdxes[name + "_padRight"] = opIdx;
+    CHECK_NNAPI_ERROR ( ANeuralNetworksModel_setOperandValue(model, opIdx, &padRight, sizeof(padRight)) );
+    parameterIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+    operandIdxes[name + "_padTop"] = opIdx;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &padTop, sizeof(padTop)) );
+    parameterIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+    operandIdxes[name + "_padBottom"] = opIdx;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &padBottom, sizeof(padBottom)) );
+    parameterIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+    operandIdxes[name + "_strideX"] = opIdx;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &strideX, sizeof(strideX)) );
+    parameterIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+    operandIdxes[name + "_strideY"] = opIdx;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &strideY, sizeof(strideY)) );
+    parameterIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+    operandIdxes[name + "_kernelW"] = opIdx;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &kernelW, sizeof(kernelW)) );
+    parameterIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+    operandIdxes[name + "_kernelH"] = opIdx;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &kernelH, sizeof(kernelH)) );
+    parameterIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+    operandIdxes[name + "_activation"] = opIdx;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_setOperandValue(model, opIdx, &fusecode, sizeof(fusecode)) );
+    parameterIdxes.push_back(opIdx);
+    ++opIdx;
+
+    const auto inDims = shapeIdxes.at(input);
+    const uint32_t outN = inDims[0];
+    const uint32_t outH = (inDims[1] - kernelH + padTop + padBottom) / strideY + 1;
+    const uint32_t outW = (inDims[2] - kernelW + padLeft + padRight) / strideX + 1;
+    const uint32_t outC = inDims[3];
+    std::vector<uint32_t> outDims = {outN, outH, outW, outC};
+
+    std::vector<uint32_t> outIdxes;
+    operandType.type = operandcode;
+    operandType.dimensionCount = static_cast<uint32_t>(inDims.size());
+    operandType.dimensions = outDims.data();
+    operandType.scale = scale;
+    operandType.zeroPoint = zeroPoint;
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperand(model, &operandType) );
+
+    operandIdxes[output] = opIdx;
+    shapeIdxes[output] = outDims;
+
+    outIdxes.push_back(opIdx);
+    ++opIdx;
+
+    CHECK_NNAPI_ERROR( ANeuralNetworksModel_addOperation(model, ANEURALNETWORKS_AVERAGE_POOL_2D, parameterIdxes.size(), &parameterIdxes[0], outIdxes.size(), &outIdxes[0]) );
+}
 
 void ModelBuilder::maxpool(const std::string& name,
-                        const std::string& input,
+						const std::string& input,
                         OperandCode operandcode,
                         int32_t padLeft,
                         int32_t padRight,
