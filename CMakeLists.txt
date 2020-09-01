@@ -17,62 +17,32 @@ include_directories(src
 				libraries/nlohmann-json
 )
 
+link_libraries(vulkan
+				android
+				neuralnetworks
+)
+
+set(SRC_COMMON
+	src/napi/builder.cpp
+	src/log_stream.cpp
+)
+
 add_executable(list-device
 			examples/list-device.cpp
-			src/napi/builder.cpp
-			src/log_stream.cpp
-)
-
-target_link_libraries(list-device
-				vulkan
-				android
-				neuralnetworks
-)
-
-add_executable(mobilenetssd-fp32
-			examples/list-device.cpp
-			src/napi/builder.cpp
-			src/log_stream.cpp
-)
-
-target_link_libraries(mobilenetssd-fp32
-				vulkan
-				android
-				neuralnetworks
-)
-
-add_executable(mobilenetssd-uint8
-			examples/list-device.cpp
-			src/napi/builder.cpp
-			src/log_stream.cpp
-)
-
-target_link_libraries(mobilenetssd-uint8
-				vulkan
-				android
-				neuralnetworks
+			${SRC_COMMON}
 )
 
 add_executable(bisenet-uint8
-			examples/list-device.cpp
-			src/napi/builder.cpp
-			src/log_stream.cpp
+			examples/bisenet-uint8.cpp
+			${SRC_COMMON}
 )
 
-target_link_libraries(bisenet-uint8
-				vulkan
-				android
-				neuralnetworks
+add_executable(mobilenetssd-uint8
+			examples/mobilenetssd-uint8.cpp
+			${SRC_COMMON}
 )
 
 add_executable(espnetv2-uint8
 			examples/espnetv2-uint8.cpp
-			src/napi/builder.cpp
-			src/log_stream.cpp
-)
-
-target_link_libraries(espnetv2-uint8
-				vulkan
-				android
-				neuralnetworks
+			${SRC_COMMON}
 )

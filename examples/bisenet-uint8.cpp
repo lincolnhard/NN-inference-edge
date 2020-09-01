@@ -648,9 +648,9 @@ int main(int ac, char *av[])
     builder.eltwise("add106", "mul105_out", "reduce106_out", ANEURALNETWORKS_FUSED_NONE, "add106_out",
                     ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_ADDITION);
 
-    builder.dequantize("deq106", "add106_out", ANEURALNETWORKS_TENSOR_FLOAT32, "deq106_out");
+    // builder.dequantize("deq106", "add106_out", ANEURALNETWORKS_TENSOR_FLOAT32, "deq106_out");
 
-    builder.resize("resize106", "deq106_out", 64, 32, ANEURALNETWORKS_TENSOR_FLOAT32, "resize106_out");
+    // builder.resize("resize106", "deq106_out", 64, 32, ANEURALNETWORKS_TENSOR_FLOAT32, "resize106_out");
 
 
 
@@ -658,7 +658,7 @@ int main(int ac, char *av[])
 
 
     builder.setInputTensors("data", indataptr, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("add106_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.setOutputTensors("reduce106_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
 
     builder.compile(deviceIndex);
 

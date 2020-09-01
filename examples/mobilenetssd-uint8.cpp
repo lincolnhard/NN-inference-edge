@@ -12,29 +12,27 @@
 
 static auto LOG = spdlog::stdout_color_mt("MAIN");
 
-// int main(int ac, char *av[])
-double runapu()
+int main(int ac, char *av[])
 {
-    // int32_t deviceIndex = -1;
-    // if (ac == 1)
-    // {
-    //     deviceIndex = -1;
-    // }
-    // else if (ac == 2)
-    // {
-    //     deviceIndex = std::stoi(std::string(av[1]));
-    // }
-    // else
-    // {
-    //     SLOG_ERROR << "Usage: " << av[0] << " [device ID] (0: GPU, 1: APU, 2: CPU, -1: Auto-select)" << std::endl;
-    //     return 1;
-    // }
-    int32_t deviceIndex = 1;
+    int32_t deviceIndex = -1;
+    if (ac == 1)
+    {
+        deviceIndex = -1;
+    }
+    else if (ac == 2)
+    {
+        deviceIndex = std::stoi(std::string(av[1]));
+    }
+    else
+    {
+        SLOG_ERROR << "Usage: " << av[0] << " [device ID] (0: GPU, 1: APU, 2: CPU, -1: Auto-select)" << std::endl;
+        return 1;
+    }
 
     gallopwave::ModelBuilder builder;
 
-    // builder.getSdkVersion();
-    // builder.getDevices();
+    builder.getSdkVersion();
+    builder.getDevices();
 
     // NNAPI default data layout NHWC
     const uint32_t NET_WIDTH = 512;
@@ -42,7 +40,7 @@ double runapu()
     const uint32_t NET_CHANNELS = 3;
     const uint32_t NET_IN_SIZE = NET_WIDTH * NET_HEIGHT * NET_CHANNELS;
 
-    // input
+    // inputs
     uint8_t *indataptr = new uint8_t[NET_IN_SIZE];
     std::fill(indataptr, indataptr + NET_IN_SIZE, 1);
 
@@ -105,8 +103,8 @@ double runapu()
     builder.conv2d("conv9", "conv8_out", "conv9_weight", "conv9_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv9_out");
 
-    builder.eltwiseAdd("add9", "conv6_out", "conv9_out", ANEURALNETWORKS_FUSED_NONE,
-                        "add9_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.eltwise("add9", "conv6_out", "conv9_out", ANEURALNETWORKS_FUSED_NONE,
+                    "add9_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_ADDITION);
 
     builder.addTensor("conv10_weight", {144, 1, 1, 24}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv10_bias", {144}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
@@ -138,8 +136,8 @@ double runapu()
     builder.conv2d("conv15", "conv14_out", "conv15_weight", "conv15_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv15_out");
 
-    builder.eltwiseAdd("add15", "conv12_out", "conv15_out", ANEURALNETWORKS_FUSED_NONE,
-                        "add15_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.eltwise("add15", "conv12_out", "conv15_out", ANEURALNETWORKS_FUSED_NONE,
+                    "add15_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_ADDITION);
 
     builder.addTensor("conv16_weight", {192, 1, 1, 32}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv16_bias", {192}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
@@ -156,8 +154,8 @@ double runapu()
     builder.conv2d("conv18", "conv17_out", "conv18_weight", "conv18_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv18_out");
 
-    builder.eltwiseAdd("add18", "add15_out", "conv18_out", ANEURALNETWORKS_FUSED_NONE,
-                        "add18_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.eltwise("add18", "add15_out", "conv18_out", ANEURALNETWORKS_FUSED_NONE,
+                    "add18_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_ADDITION);
 
     builder.addTensor("conv19_weight", {192, 1, 1, 32}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv19_bias", {192}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
@@ -189,8 +187,8 @@ double runapu()
     builder.conv2d("conv24", "conv23_out", "conv24_weight", "conv24_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv24_out");
 
-    builder.eltwiseAdd("add24", "conv21_out", "conv24_out", ANEURALNETWORKS_FUSED_NONE,
-                        "add24_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.eltwise("add24", "conv21_out", "conv24_out", ANEURALNETWORKS_FUSED_NONE,
+                    "add24_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_ADDITION);
 
     builder.addTensor("conv25_weight", {384, 1, 1, 64}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv25_bias", {384}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
@@ -207,8 +205,8 @@ double runapu()
     builder.conv2d("conv27", "conv26_out", "conv27_weight", "conv27_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv27_out");
 
-    builder.eltwiseAdd("add27", "add24_out", "conv27_out", ANEURALNETWORKS_FUSED_NONE,
-                        "add27_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.eltwise("add27", "add24_out", "conv27_out", ANEURALNETWORKS_FUSED_NONE,
+                    "add27_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_ADDITION);
 
     builder.addTensor("conv28_weight", {384, 1, 1, 64}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv28_bias", {384}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
@@ -225,8 +223,8 @@ double runapu()
     builder.conv2d("conv30", "conv29_out", "conv30_weight", "conv30_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv30_out");
 
-    builder.eltwiseAdd("add30", "add27_out", "conv30_out", ANEURALNETWORKS_FUSED_NONE,
-                        "add30_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.eltwise("add30", "add27_out", "conv30_out", ANEURALNETWORKS_FUSED_NONE,
+                    "add30_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_ADDITION);
 
     builder.addTensor("conv31_weight", {384, 1, 1, 64}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv31_bias", {384}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
@@ -258,8 +256,8 @@ double runapu()
     builder.conv2d("conv36", "conv35_out", "conv36_weight", "conv36_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv36_out");
 
-    builder.eltwiseAdd("add36", "conv33_out", "conv36_out", ANEURALNETWORKS_FUSED_NONE,
-                        "add36_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.eltwise("add36", "conv33_out", "conv36_out", ANEURALNETWORKS_FUSED_NONE,
+                    "add36_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_ADDITION);
 
     builder.addTensor("conv37_weight", {576, 1, 1, 96}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv37_bias", {576}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
@@ -276,8 +274,8 @@ double runapu()
     builder.conv2d("conv39", "conv38_out", "conv39_weight", "conv39_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv39_out");
 
-    builder.eltwiseAdd("add39", "add36_out", "conv39_out", ANEURALNETWORKS_FUSED_NONE,
-                        "add39_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.eltwise("add39", "add36_out", "conv39_out", ANEURALNETWORKS_FUSED_NONE,
+                    "add39_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_ADDITION);
 
 
     ////////////
@@ -314,8 +312,8 @@ double runapu()
     builder.conv2d("conv45", "conv44_out", "conv45_weight", "conv45_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv45_out");
 
-    builder.eltwiseAdd("add45", "conv42_out", "conv45_out", ANEURALNETWORKS_FUSED_NONE,
-                        "add45_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.eltwise("add45", "conv42_out", "conv45_out", ANEURALNETWORKS_FUSED_NONE,
+                    "add45_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_ADDITION);
 
     builder.addTensor("conv46_weight", {960, 1, 1, 160}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv46_bias", {960}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
@@ -332,8 +330,8 @@ double runapu()
     builder.conv2d("conv48", "conv47_out", "conv48_weight", "conv48_bias", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM,
                     0, 0, 0, 0, 1, 1, false, ANEURALNETWORKS_FUSED_NONE, "conv48_out");
 
-    builder.eltwiseAdd("add48", "add45_out", "conv48_out", ANEURALNETWORKS_FUSED_NONE,
-                        "add48_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
+    builder.eltwise("add48", "add45_out", "conv48_out", ANEURALNETWORKS_FUSED_NONE,
+                    "add48_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, ELTWISE_ADDITION);
 
     builder.addTensor("conv49_weight", {960, 1, 1, 160}, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM, weightptr);
     builder.addTensor("conv49_bias", {960}, ANEURALNETWORKS_TENSOR_INT32, biasptr);
@@ -508,17 +506,6 @@ double runapu()
 
     // set input/output
     builder.setInputTensors("data", indataptr, ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("conv65_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("conv66_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("conv67_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("conv68_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("conv69_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("conv70_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("conv71_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("conv72_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("conv73_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("conv74_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
-    builder.setOutputTensors("conv75_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
     builder.setOutputTensors("conv76_out", ANEURALNETWORKS_TENSOR_QUANT8_ASYMM);
 
 
@@ -528,7 +515,7 @@ double runapu()
 
     // execute
     double timesum = 0.0;
-    const int EVALUATE_TIMES = 100;
+    const int EVALUATE_TIMES = 1;
     for (int t = 0; t < EVALUATE_TIMES; ++t)
     {
         std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
