@@ -55,7 +55,8 @@ private:
     void initMeshgrid();
     Coordinate getAvgCenter(KeyPoint kpt);
     bool suppressedByDist(KeyPoint frontkpt, KeyPoint otherkpt, float th);
-    bool suppressedByIOU(KeyPoint frontkpt, KeyPoint otherkpt, float th);
+    bool suppressedByIOU(KeyPoint frontkpt, KeyPoint otherkpt, float th); // Area of Intersection / Area of Union
+    bool suppressedByIOM(KeyPoint frontkpt, KeyPoint otherkpt, float th); // Area of Intersection / Area of Min
     template<typename T>
     T overlap(T asmall, T abig, T bsmall, T bbig)
     {

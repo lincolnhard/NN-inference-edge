@@ -34,6 +34,30 @@ void PostprocessFCOS::initMeshgrid()
 }
 
 
+bool PostprocessFCOS::suppressedByIOM(KeyPoint frontkpt, KeyPoint otherkpt, float th)
+{
+    auto ax1 = frontkpt.vertexTL.x;
+    auto ax2 = frontkpt.vertexBR.x;
+    auto ay1 = frontkpt.vertexTL.y;
+    auto ay2 = frontkpt.vertexBR.y;
+    auto bx1 = otherkpt.vertexTL.x;
+    auto bx2 = otherkpt.vertexBR.x;
+    auto by1 = otherkpt.vertexTL.y;
+    auto by2 = otherkpt.vertexBR.y;
+
+    auto w = overlap(ax1, ax2, bx1, bx2);
+    auto h = overlap(ay1, ay2, by1, by2);
+    if (w < 0 || h < 0)
+    {
+        return false;
+    }
+    auto interArea = w * h;
+    auto minArea = std::min(((ax2 - ax1 + 1) * (ay2 - ay1 + 1)), ((bx2 - bx1 + 1) * (by2 - by1 + 1)));
+    auto iou = interArea / minArea;
+    return iou > th;
+}
+
+
 bool PostprocessFCOS::suppressedByIOU(KeyPoint frontkpt, KeyPoint otherkpt, float th)
 {
     auto ax1 = frontkpt.vertexTL.x;
@@ -189,7 +213,8 @@ std::vector<std::vector<KeyPoint>> PostprocessFCOS::run(std::vector<const float 
                 auto otherkpt = classKeyPoints[clsIdx][i];
 
                 // if (suppressedByDist(frontkpt, otherkpt, nmsTh))
-                if (suppressedByIOU(frontkpt, otherkpt, nmsTh))
+                // if (suppressedByIOU(frontkpt, otherkpt, nmsTh))
+                if (suppressedByIOM(frontkpt, otherkpt, nmsTh))
                 {
                     classKeyPoints[clsIdx].erase(classKeyPoints[clsIdx].begin() + i);
                 }
