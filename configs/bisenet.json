@@ -2,21 +2,21 @@
     "evaluate":{
         "times": 1000,
         "image_path": "/home/gw/pics-1024x512/road3.png",
-        "folder_path": "/home/gw/pics-1024x512",
+        "folder_path": "/mnt/data/pics-1800x1600",
         "extension": ".png"
     },
     "model":{
-        "net_width": 1024,
-        "net_height": 512,
-        "max_classes": 50
+        "net_width": 800,
+        "net_height": 608,
+        "max_classes": 5
     },
     "trt":{
-        "uffpath": "/home/gw/NN-inference-edge/data/bisenet.uff", 
-        "engine": "/home/gw/NN-inference-edge/data/bisenet_fp32.engine",
+        "uffpath": "/mnt/data/models/nie-bisenet-seg5.uff", 
+        "engine": "/mnt/data/models/nie-bisenet-seg5-fp32.uff",
         "input_layer_name": ["transpose"],
-        "input_layer_shape": [[3, 512, 1024]],
+        "input_layer_shape": [[3, 608, 800]],
         "output_layer_name": ["y_hat/ArgMax"],
-        "output_layer_shape": [[512, 1024]],
-        "fp16_mode": true
+        "output_layer_shape": [[608, 800]],
+        "fp16_mode": false
     }
 }
