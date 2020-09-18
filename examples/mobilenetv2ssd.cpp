@@ -2,8 +2,9 @@
 #include <vector>
 #include <chrono>
 #include <thread>
+#include <future>
 #include <experimental/filesystem>
-
+#include <signal.h>
 #include <json.hpp>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -16,6 +17,12 @@
 
 static auto LOG = spdlog::stdout_color_mt("MAIN");
 
+std::promise<void> isExit;
+
+void sigHandler(int sig)
+{
+    isExit.set_value();
+}
 
 void plotResult(cv::Mat &im, const float* tensorBuf, std::vector<int> tensorShapes, const float TH)
 {
@@ -46,6 +53,38 @@ void plotResult(cv::Mat &im, const float* tensorBuf, std::vector<int> tensorShap
     }
 }
 
+void outputResult(const std::string& outpath, cv::Mat &im, const float* tensorBuf,
+                std::vector<int> tensorShapes, const float TH, std::vector<std::string>& CLASS_NAME)
+{
+    std::ofstream fout(outpath, std::ios::trunc);
+
+    const int NUM_BOX = tensorShapes[0];
+    const int NUM_BOX_ATTR = tensorShapes[1];
+
+    const float* bufptr = tensorBuf;
+    for (int box_i = 0; box_i < NUM_BOX; ++box_i)
+    {
+        auto left = bufptr[0] * (im.cols - 1);
+        auto top = bufptr[1] * (im.rows - 1);
+        auto right = bufptr[2] * (im.cols - 1);
+        auto bottom = bufptr[3] * (im.rows - 1);
+        auto confidence = bufptr[4];
+        auto classType = bufptr[5];
+        bufptr += NUM_BOX_ATTR;
+
+        if ((classType == -1.0f) || (confidence < TH))
+        {
+            continue;
+        }
+
+        fout << CLASS_NAME[static_cast<int>(classType) - 1] << ' ' << confidence << ' ' <<
+        left << ' ' << top << ' ' << right << ' ' << bottom << std::endl;
+    }
+
+
+    fout.close();
+}
+
 
 int main(int ac, char *av[])
 {
@@ -61,7 +100,8 @@ int main(int ac, char *av[])
     fin >> config;
     fin.close();
 
-
+    signal(SIGINT, sigHandler);
+    auto waitExitCmd = isExit.get_future();
 
     const std::string FOLDERPATH = config["evaluate"]["folder_path"].get<std::string>();
     const std::string IMEXT = config["evaluate"]["extension"].get<std::string>();
@@ -77,6 +117,7 @@ int main(int ac, char *av[])
     const int NETW = config["model"]["net_width"].get<int>();
     const int NETH = config["model"]["net_height"].get<int>();
     const float DET_TH = config["model"]["class_score_threshold"].get<float>();
+    std::vector<std::string> CLASS_NAME = config["model"]["class_name"].get<std::vector<std::string>>();
     const int NET_PLANESIZE = NETW * NETH;
 
 
@@ -104,11 +145,20 @@ int main(int ac, char *av[])
             nvmodel.run();
 
             const float* scoresTensor = static_cast<const float*>(nvmodel.getHostBuffer(OUT_TENSOR_NAMES[0]));
-            plotResult(imnet, scoresTensor, OUT_TENSOR_SHAPES[0], DET_TH);
-            cv::imwrite(picpath.replace_extension().string() + "_result.jpg", imnet);
+            // plotResult(imnet, scoresTensor, OUT_TENSOR_SHAPES[0], DET_TH);
+            // cv::imwrite(picpath.replace_extension().string() + "_result.jpg", imnet);
+
+            std::string outpath = picpath.replace_extension().string() + ".txt";
+            SLOG_INFO << outpath << std::endl;
+            outputResult(outpath, im, scoresTensor, OUT_TENSOR_SHAPES[0], DET_TH, CLASS_NAME);
+        }
+
+        if (waitExitCmd.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+        {
+            break;
         }
     }
 
-
+    SLOG_INFO << "fin" << std::endl;
     return 0;
 }
