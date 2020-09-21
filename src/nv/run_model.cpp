@@ -175,6 +175,12 @@ gallopwave::NVModel::NVModel(std::string enginePath)
 {
     initLibNvInferPlugins(&logger, "");
     std::ifstream engineFile(enginePath, std::ios::binary);
+    if (!engineFile.is_open())
+    {
+        SLOG_ERROR << "Failed to open trt engine file" << std::endl;
+        abort();
+    }
+
     std::vector<char> engineFileStream(std::istreambuf_iterator<char>(engineFile), {});
 
     auto runtime = NVUniquePtr<nvinfer1::IRuntime>(nvinfer1::createInferRuntime(logger));
