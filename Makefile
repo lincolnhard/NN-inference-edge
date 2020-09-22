@@ -37,13 +37,12 @@ SRCFILES += $(wildcard src/nie/*.cu)
 
 # EXAMPLEFILES := examples/bisenet.cpp
 # EXAMPLEFILES := examples/mobilenetv2ssd.cpp
-EXAMPLEFILES := examples/espnet.cpp
+# EXAMPLEFILES := examples/espnet-video.cpp
 # EXAMPLEFILES := examples/espnet-async.cpp
 # EXAMPLEFILES := examples/main-create-engine.cpp
 # EXAMPLEFILES := examples/main-engine-fps.cpp
 # EXAMPLEFILES := examples/main-multiple.cpp
-
-
+EXAMPLEFILES := examples/espnet.cpp
 
 
 OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cu, %.o, $(patsubst %.cpp, %.o, $(SRCFILES) $(EXAMPLEFILES))))

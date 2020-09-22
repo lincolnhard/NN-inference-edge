@@ -1,39 +1,43 @@
 {
     "evaluate":{
         "times": 1000,
-        "image_path": "data/1-001544684003-228600-014287.jpg",
+        "image_path": "data/1-001544684461-353600-016759.jpg",
+        "video_path": "data/20181002005412-00-00.MP4",
         "images_for_fps": "pics/%d_640x480.jpg",
-        "folder_path": "/data/local/tmp/recordvepp/"
+        "folder_path": "/mnt/data/pic1920x1080/",
+        "extension": ".jpg"
     },
     "model":{
         "mean":{
-            "R": 0.4902,
-            "G": 0.4940,
-            "B": 0.4946
+            "R": 0.2379,
+            "G": 0.3368,
+            "B": 0.3261
         },
         "std":{
-            "R": 0.2799,
-            "G": 0.2853,
-            "B": 0.2711
+            "R": 0.1891,
+            "G": 0.2054,
+            "B": 0.2185
         },
-        "net_width": 640,
+        "net_width": 800,
         "net_height": 480,
-        "feature_width": 80,
+        "feature_width": 100,
         "feature_height": 60,
-        "num_class_bbox": 3,
+        "num_class_bbox": 4,
         "stride": 8,
         "topK": 1000,
         "nms_threshold_dist": 40,
-        "nms_threshold_iou": 0.4,
-        "class_score_threshold": [0.3, 0.3, 0.3],
-        "num_class_seg": 4
+        "nms_threshold_iou": 0.5,
+        "class_score_threshold": [0.3, 0.3, 0.4, 0.2],
+        "num_class_seg": 5,
+        "class_name": ["round", "rectangle", "triangle", "variable"]
     },
     "trt":{
         "onnxpath": "/home/gw/NN-inference-edge/data/espnet_0807_full.onnx",
-        "engine": "/home/gw/NN-inference-edge/data/espnet_0807_full_fp32.engine",
-        "input_layer_name": ["input"],
-        "input_layer_shape": [[3, 480, 640]],
+        "engine": "/mnt/data/NN-inference-edge/data/kevin/best_pruned_40_light.engine",
+        "input_layer_name": ["input.1"],
+        "input_layer_shape": [[3, 480, 800]],
         "output_layer_name": ["cls_score", "bbox_pred", "centerness", "seg"],
+	    "output_layer_shape": [[480, 800]],
         "fp16_mode": false
     }
 }

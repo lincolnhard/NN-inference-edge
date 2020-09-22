@@ -36,10 +36,10 @@ int main(int ac, char *av[])
 
 
 
-    std::vector<std::string> IN_TENSOR_NAMES = config["trt"]["input_layer_name"].get<std::vector<std::string>>();
+    // std::vector<std::string> IN_TENSOR_NAMES = config["trt"]["input_layer_name"].get<std::vector<std::string>>();
     // std::vector<std::vector<int>> IN_TENSOR_SHAPES = config["trt"]["input_layer_shape"].get<std::vector<std::vector<int>>>();
     // assert(IN_TENSOR_NAMES.size() == IN_TENSOR_SHAPES.size());
-    std::vector<std::string> OUT_TENSOR_NAMES = config["trt"]["output_layer_name"].get<std::vector<std::string>>();
+    // std::vector<std::string> OUT_TENSOR_NAMES = config["trt"]["output_layer_name"].get<std::vector<std::string>>();
     const bool FP16MODE = config["trt"]["fp16_mode"].get<bool>();
     const std::string TRT_ENGINE_PATH = config["trt"]["engine"].get<std::string>();
 
