@@ -25,7 +25,7 @@ SRCFILES += $(wildcard src/rknn/*.cpp)
 EXAMPLEFILES := examples/main-run.cpp
 
 
-OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cu, %.o, $(patsubst %.cpp, %.o, $(SRCFILES) $(EXAMPLEFILES))))
+OBJS := $(addprefix $(OBJROOT)/, $(patsubst %.cpp, %.o, $(SRCFILES) $(EXAMPLEFILES)))
 
 # $(error LHH: '$(OBJS)')
 

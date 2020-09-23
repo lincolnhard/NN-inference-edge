@@ -3,6 +3,8 @@ libraries/ffmpegbuild
 libraries/opencv
 libraries/snpe-1.25.0.287
 libraries/snpe-1.35.0.698
+libraries/protobuf
+libraries/armnn
 toolchain
 app/obj
 app/libs
@@ -16,3 +18,4 @@ result.jpg
 obj
 data
 libs
+build
