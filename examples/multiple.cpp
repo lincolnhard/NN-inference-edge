@@ -17,18 +17,13 @@
 
 static auto LOG = spdlog::stdout_color_mt("MAIN");
 
-
 std::promise<void> isExit;
-
 
 void segFunc(nlohmann::json config)
 {
     const std::string TRT_ENGINE_PATH = config["engine"].get<std::string>();
     const int EVALUATE_TIMES = config["times"].get<int>();
-
-
     gallopwave::NVModel nvmodel(TRT_ENGINE_PATH);
-
     
     int loopCount = 0;
     double timesum = 0.0;
@@ -37,21 +32,11 @@ void segFunc(nlohmann::json config)
     {
         std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
 
-
         nvmodel.runAsync();
-
 
         std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
         timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
         loopCount += 1;
-
-        // {
-        //     std::lock_guard<std::mutex> lock(gMutex);
-        //     if (isTimeToStop == true)
-        //     {
-        //         break;
-        //     }
-        // }
     }
 
     SLOG_INFO << "loopCount: " << loopCount << std::endl; 
@@ -62,30 +47,18 @@ void detFunc(nlohmann::json config)
 {
     const std::string TRT_ENGINE_PATH = config["engine"].get<std::string>();
     const int EVALUATE_TIMES = config["times"].get<int>();
-
-
     gallopwave::NVModel nvmodel(TRT_ENGINE_PATH);
-
 
     double timesum = 0.0;
     for (int t = 0; t < EVALUATE_TIMES; ++t)
     {
-
         std::chrono::steady_clock::time_point time1 = std::chrono::steady_clock::now();
 
-
         nvmodel.runAsync();
-
 
         std::chrono::steady_clock::time_point time2 = std::chrono::steady_clock::now();
         timesum += (std::chrono::duration_cast<std::chrono::milliseconds>(time2 - time1).count());
     }
-
-    // tell the other thread to terminate
-    // {
-    // std::lock_guard<std::mutex> lock(gMutex);
-    // isTimeToStop = true;
-    // }
     isExit.set_value();
 
     SLOG_INFO << "Detection FPS: " << 1.0 / (timesum / EVALUATE_TIMES / 1000.0) << std::endl;

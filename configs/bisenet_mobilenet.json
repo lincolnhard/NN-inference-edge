@@ -1,10 +1,10 @@
 {
     "bisenet":{
-        "engine": "/mnt/data/pitch_seg_5/engine/model.engine",
+        "engine": "/mnt/data/NN-inference-edge/data/nie-bisenet-seg5-fp16.engine",
         "times": 1000
     },
     "mobilenetssd":{
-        "engine": "/mnt/data/pitch_det_4/engine/model.engine",
+        "engine": "/mnt/data/NN-inference-edge/data/nie-mobilenetssd-det4-fp16.engine",
         "times": 1000
     }
 }
