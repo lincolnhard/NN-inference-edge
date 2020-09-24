@@ -4,7 +4,7 @@
         "image_path": "data/1-001544684461-353600-016759.jpg",
         "video_path": "data/20181002005412-00-00.MP4",
         "images_for_fps": "pics/%d_640x480.jpg",
-        "folder_path": "/mnt/data/pic1920x1080/",
+        "folder_path": "../data/pic1920x1080/",
         "extension": ".jpg"
     },
     "model":{
@@ -32,8 +32,8 @@
         "class_name": ["round", "rectangle", "triangle", "variable"]
     },
     "trt":{
-        "onnxpath": "/home/gw/NN-inference-edge/data/espnet_0807_full.onnx",
-        "engine": "/mnt/data/NN-inference-edge/data/kevin/best_pruned_40_light.engine",
+        "onnxpath": "../data/nit-espnetv2-fp32.onnx",
+        "engine": "../data/nit-espnetv2-fp32.engine",
         "input_layer_name": ["input.1"],
         "input_layer_shape": [[3, 480, 800]],
         "output_layer_name": ["cls_score", "bbox_pred", "centerness", "seg"],

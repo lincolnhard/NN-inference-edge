@@ -6,9 +6,8 @@ nnapi branch for G90
 
 rknn branch for RK3399
 
-TensorRT engines please download [here](https://gallopwave-my.sharepoint.com/:u:/p/lincoln_lee/EVpG3vto2RlPmSo7leUNr5QB-oSksz-4DTxEiqjzK8d1kw?e=1TezlE)
+TensorRT engines please download [here](https://gallopwave-my.sharepoint.com/:u:/p/lincoln_lee/EVpG3vto2RlPmSo7leUNr5QB-oSksz-4DTxEiqjzK8d1kw?e=1TezlE) and extract under this repo
 
-You need to specify *trt engine* file location and *folder path* inside each config/*.json
 
 ```
 mkdir build
@@ -16,7 +15,7 @@ cd build
 cmake ..
 make -j8
 
-# Create tensorRT engine
+# Create tensorRT engine (optional)
 ./create-engine ../configs/mobilenetv2ssd.json
 
 # Calculate fps

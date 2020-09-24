@@ -17,3 +17,5 @@ obj
 data
 libs
 build
+armnn
+protobuf
