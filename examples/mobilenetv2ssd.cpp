@@ -14,6 +14,7 @@
 
 #include "log_stream.hpp"
 #include "nv/run_model.hpp"
+#include "utils.hpp"
 
 static auto LOG = spdlog::stdout_color_mt("MAIN");
 
@@ -126,6 +127,9 @@ int main(int ac, char *av[])
     float* intensorPtrG = intensorPtrR + NET_PLANESIZE;
     float* intensorPtrB = intensorPtrG + NET_PLANESIZE;
 
+    gallopwave::SysRes sysres;
+    sysres.markCpuState();
+
     for (auto& picpathIt: std::experimental::filesystem::recursive_directory_iterator(FOLDERPATH))
     {
         std::experimental::filesystem::path picpath = picpathIt.path();
@@ -148,9 +152,9 @@ int main(int ac, char *av[])
             // plotResult(imnet, scoresTensor, OUT_TENSOR_SHAPES[0], DET_TH);
             // cv::imwrite(picpath.replace_extension().string() + "_result.jpg", imnet);
 
-            std::string outpath = picpath.replace_extension().string() + ".txt";
-            SLOG_INFO << outpath << std::endl;
-            outputResult(outpath, im, scoresTensor, OUT_TENSOR_SHAPES[0], DET_TH, CLASS_NAME);
+            // std::string outpath = picpath.replace_extension().string() + ".txt";
+            // SLOG_INFO << outpath << std::endl;
+            // outputResult(outpath, im, scoresTensor, OUT_TENSOR_SHAPES[0], DET_TH, CLASS_NAME);
         }
 
         if (waitExitCmd.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
@@ -158,6 +162,9 @@ int main(int ac, char *av[])
             break;
         }
     }
+
+    float cpusage = sysres.getCpuUsage();
+    SLOG_INFO << "CPU usage = " << cpusage << std::endl;
 
     SLOG_INFO << "fin" << std::endl;
     return 0;
