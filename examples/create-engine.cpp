@@ -30,40 +30,66 @@ int main(int ac, char *av[])
     fin.close();
 
 
+    bool isConvertFromOnnx = false;
+    bool isConvertFromUff = false;
+    auto trtAttrs = config["trt"].get<nlohmann::json::object_t>();
+    for (auto& kvp : trtAttrs)
+    {
+        std::string attr = kvp.first;
+        if (attr == "uffpath")
+        {
+            isConvertFromUff = true;
+        }
+        if (attr == "onnxpath")
+        {
+            isConvertFromOnnx = true;
+        }
+    }
 
-    // const std::string UFFPATH = config["trt"]["uffpath"].get<std::string>();
-    const std::string ONNXPATH = config["trt"]["onnxpath"].get<std::string>();
+    if (isConvertFromOnnx && isConvertFromUff)
+    {
+        SLOG_ERROR << "Please specify one onnx file path or one uff file path, not both" << std::endl;
+        return 1;
+    }
 
+    if (isConvertFromOnnx)
+    {
+        const std::string ONNXPATH = config["trt"]["onnxpath"].get<std::string>();
+        const bool FP16MODE = config["trt"]["fp16_mode"].get<bool>();
+        const std::string TRT_ENGINE_PATH = config["trt"]["engine"].get<std::string>();
+        gallopwave::NVModel nvmodel(ONNXPATH, FP16MODE);
+        nvmodel.outputEngine(TRT_ENGINE_PATH);
+    }
+    else if (isConvertFromUff)
+    {
+        const std::string UFFPATH = config["trt"]["uffpath"].get<std::string>();
+        const bool FP16MODE = config["trt"]["fp16_mode"].get<bool>();
+        const std::string TRT_ENGINE_PATH = config["trt"]["engine"].get<std::string>();
+        std::vector<std::string> IN_TENSOR_NAMES = config["trt"]["input_layer_name"].get<std::vector<std::string>>();
+        std::vector<std::vector<int>> IN_TENSOR_SHAPES = config["trt"]["input_layer_shape"].get<std::vector<std::vector<int>>>();
+        assert(IN_TENSOR_NAMES.size() == IN_TENSOR_SHAPES.size());
+        std::vector<std::string> OUT_TENSOR_NAMES = config["trt"]["output_layer_name"].get<std::vector<std::string>>();
 
-
-    // std::vector<std::string> IN_TENSOR_NAMES = config["trt"]["input_layer_name"].get<std::vector<std::string>>();
-    // std::vector<std::vector<int>> IN_TENSOR_SHAPES = config["trt"]["input_layer_shape"].get<std::vector<std::vector<int>>>();
-    // assert(IN_TENSOR_NAMES.size() == IN_TENSOR_SHAPES.size());
-    // std::vector<std::string> OUT_TENSOR_NAMES = config["trt"]["output_layer_name"].get<std::vector<std::string>>();
-    const bool FP16MODE = config["trt"]["fp16_mode"].get<bool>();
-    const std::string TRT_ENGINE_PATH = config["trt"]["engine"].get<std::string>();
-
-
-    // std::vector<std::pair<std::string, nvinfer1::Dims>> uffInputs;
-    // for (size_t i = 0; i < IN_TENSOR_NAMES.size(); ++i)
-    // {
-    //     nvinfer1::Dims dims;
-    //     int numDimens = static_cast<int>(IN_TENSOR_SHAPES[i].size());
-    //     dims.nbDims = numDimens;
-    //     for (int j = 0; j < numDimens; ++j)
-    //     {
-    //         dims.d[j] = IN_TENSOR_SHAPES[i][j];
-    //     }
-
-    //     uffInputs.push_back(std::make_pair(IN_TENSOR_NAMES[i], dims));
-    // }
-
-
-
-    gallopwave::NVModel nvmodel(ONNXPATH, FP16MODE);
-    // gallopwave::NVModel nvmodel(UFFPATH, uffInputs, OUT_TENSOR_NAMES, FP16MODE);
-
-    nvmodel.outputEngine(TRT_ENGINE_PATH);
+        std::vector<std::pair<std::string, nvinfer1::Dims>> uffInputs;
+        for (size_t i = 0; i < IN_TENSOR_NAMES.size(); ++i)
+        {
+            nvinfer1::Dims dims;
+            int numDimens = static_cast<int>(IN_TENSOR_SHAPES[i].size());
+            dims.nbDims = numDimens;
+            for (int j = 0; j < numDimens; ++j)
+            {
+                dims.d[j] = IN_TENSOR_SHAPES[i][j];
+            }
+            uffInputs.push_back(std::make_pair(IN_TENSOR_NAMES[i], dims));
+        }
+        gallopwave::NVModel nvmodel(UFFPATH, uffInputs, OUT_TENSOR_NAMES, FP16MODE);
+        nvmodel.outputEngine(TRT_ENGINE_PATH);
+    }
+    else
+    {
+        SLOG_ERROR << "Need onnx file path or one uff file path" << std::endl;
+        return 1;
+    }
 
     return 0;
 }
