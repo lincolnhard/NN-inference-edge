@@ -64,6 +64,11 @@
         "thread": "cpp",
         "typeinfo": "cpp",
         "valarray": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "*.ipp": "cpp",
+        "unordered_set": "cpp",
+        "filesystem": "cpp",
+        "cfenv": "cpp",
+        "typeindex": "cpp"
     }
 }
